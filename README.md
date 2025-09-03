@@ -1,73 +1,156 @@
-# Welcome to your Lovable project
+# MishMob - Community Volunteer Matching Platform
 
-## Project info
+**Mobilizing purpose, meaning, and belonging through community action.**
 
-**URL**: https://lovable.dev/projects/1a0ef1cb-d98f-4eb4-a98c-35a635619d9a
+MishMob connects skilled volunteers with meaningful opportunities using AI-powered matching to build stronger communities.
 
-## How can I edit this code?
+## 🚀 Quick Start
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/1a0ef1cb-d98f-4eb4-a98c-35a635619d9a) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Development
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Production Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+#### 1. Connect to GitHub
+- In Lovable: GitHub → Connect to GitHub
+- Create new repository: `mishmob-frontend`
 
-**Use GitHub Codespaces**
+#### 2. Set up Backend (separate repo)
+```bash
+# Follow the detailed guide in backend-scaffold/README.md
+mkdir mishmob-backend && cd mishmob-backend
+# ... (see backend scaffold for complete setup)
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+#### 3. Deploy to EC2
+```bash
+# On your EC2 instance
+curl -o setup.sh https://raw.githubusercontent.com/yourusername/mishmob-frontend/main/deployment/setup-ec2.sh
+chmod +x setup.sh && ./setup.sh
+```
 
-## What technologies are used for this project?
+## 🏗️ Architecture
 
-This project is built with:
+### Frontend (This Repository)
+- **Framework**: React 18 + Vite + TypeScript
+- **UI**: Tailwind CSS + shadcn/ui components
+- **State**: TanStack Query for server state
+- **Deployment**: Static files served by Nginx
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Backend (Separate Repository)
+- **API**: Django + Django Ninja (OpenAPI)
+- **Database**: AWS Aurora Serverless v2 (PostgreSQL)
+- **Auth**: JWT with refresh tokens
+- **Storage**: AWS S3 for media files
+- **Deployment**: Docker on EC2
 
-## How can I deploy this project?
+### Infrastructure
+- **Hosting**: AWS EC2 with Docker Compose
+- **Database**: Aurora Serverless v2 (scales 0.5-4 ACUs)
+- **CDN**: CloudFront (optional)
+- **SSL**: Let's Encrypt or AWS Certificate Manager
+- **CI/CD**: GitHub Actions
 
-Simply open [Lovable](https://lovable.dev/projects/1a0ef1cb-d98f-4eb4-a98c-35a635619d9a) and click on Share -> Publish.
+## 📦 Tech Stack
 
-## Can I connect a custom domain to my Lovable project?
+**Frontend:**
+- React 18, TypeScript, Vite
+- Tailwind CSS, shadcn/ui
+- TanStack Query, React Router
+- Lucide Icons
 
-Yes, you can!
+**Backend:**
+- Django 5.0, Django Ninja
+- PostgreSQL, Redis
+- AWS SDK, Boto3
+- Gunicorn, Uvicorn
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+**DevOps:**
+- Docker, Docker Compose
+- GitHub Actions
+- AWS ECR, AWS Aurora
+- Nginx reverse proxy
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔧 Environment Setup
+
+### Required AWS Resources
+1. **Aurora Serverless v2 Cluster** - PostgreSQL database
+2. **ECR Repository** - Docker image storage  
+3. **S3 Bucket** - Media file storage
+4. **IAM Roles** - EC2 and Lambda permissions
+5. **VPC & Security Groups** - Network configuration
+
+### GitHub Secrets
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY  
+AWS_REGION
+EC2_HOST
+EC2_USERNAME
+EC2_SSH_KEY
+```
+
+## 🚀 Deployment Flow
+
+1. **Code Push** → GitHub triggers Actions
+2. **Frontend Build** → TypeScript compilation + Vite build
+3. **Backend Build** → Docker image pushed to ECR
+4. **EC2 Deploy** → SSH deployment with zero-downtime
+5. **Database Migrations** → Automatic Django migrations
+6. **Health Checks** → Verify deployment success
+
+## 📊 Features
+
+### For Volunteers
+- 🎯 **AI Skills Matching** - Upload resume for personalized recommendations
+- 📍 **Location-Based Search** - Find local opportunities
+- 📈 **Impact Tracking** - Dashboard showing hours and lives impacted
+- 🏆 **Skill Development** - Verified competency building
+- ⭐ **Community Ratings** - Peer feedback and endorsements
+
+### For Organizations  
+- 📝 **Opportunity Management** - Easy posting and volunteer management
+- 👥 **Team Building** - Recruit skilled volunteers
+- 📊 **Impact Analytics** - Track program effectiveness
+- 🎓 **Volunteer Training** - Built-in skill development paths
+
+## 🔒 Security
+
+- **Authentication**: JWT tokens with secure refresh
+- **Authorization**: Role-based access control
+- **Data Protection**: GDPR-compliant user data handling
+- **API Security**: Rate limiting, CORS, input validation
+- **Infrastructure**: VPC isolation, security groups, SSL/TLS
+
+## 📈 Scalability
+
+- **Database**: Aurora Serverless auto-scales (0.5-4 ACUs)
+- **API**: Horizontal scaling via load balancer
+- **Static Assets**: CDN distribution
+- **Caching**: Redis for sessions and API responses
+- **Monitoring**: CloudWatch + application metrics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [View detailed setup guide](backend-scaffold/README.md)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/mishmob-frontend/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mishmob-frontend/discussions)
+
+---
+
+**Built with ❤️ for stronger communities**
