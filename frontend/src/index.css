@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MishMob Design System - Purpose-driven community platform */
+
+@layer base {
+  :root {
+    /* Core brand colors - warm, community-focused palette */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    /* Primary: Deep purple */
+    --primary: 254 50% 41%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 254 50% 55%;
+    --primary-dark: 254 50% 30%;
+
+    /* Secondary: Vibrant blue */
+    --secondary: 211 74% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 211 74% 65%;
+
+    /* Accent: Complementary teal */
+    --accent: 180 50% 45%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 180 50% 55%;
+
+    /* Neutral colors */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 13% 60%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 254 50% 41%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --radius: 0.75rem;
+
+    /* Gradients for impact */
+    --gradient-hero: linear-gradient(135deg, hsl(254 50% 41%), hsl(211 74% 55%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 96%));
+    
+    /* Shadows for depth */
+    --shadow-soft: 0 2px 10px -2px hsl(220 13% 60% / 0.1);
+    --shadow-medium: 0 8px 30px -8px hsl(220 13% 60% / 0.15);
+    --shadow-strong: 0 20px 50px -15px hsl(254 50% 41% / 0.2);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bouncy: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark mode colors maintaining brand identity */
+    --background: 220 13% 9%;
+    --foreground: 0 0% 95%;
+
+    --card: 220 13% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 220 13% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary remains strong in dark mode */
+    --primary: 254 50% 55%;
+    --primary-foreground: 220 13% 9%;
+    --primary-light: 254 50% 65%;
+    --primary-dark: 254 50% 45%;
+
+    /* Secondary adapted for dark */
+    --secondary: 211 74% 60%;
+    --secondary-foreground: 220 13% 9%;
+    --secondary-light: 211 74% 70%;
+
+    /* Accent adapted */
+    --accent: 180 50% 50%;
+    --accent-foreground: 220 13% 9%;
+    --accent-light: 180 50% 60%;
+
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 13% 65%;
+
+    --border: 220 13% 20%;
+    --input: 220 13% 20%;
+    --ring: 254 50% 55%;
+
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 220 13% 9%;
+
+    /* Dark mode gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(254 50% 55%), hsl(211 74% 60%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 13% 9%), hsl(220 13% 12%));
+    --gradient-card: linear-gradient(145deg, hsl(220 13% 12%), hsl(220 13% 15%));
+    
+    --sidebar-background: 220 13% 8%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 254 50% 55%;
+    --sidebar-primary-foreground: 220 13% 9%;
+    --sidebar-accent: 220 13% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 220 13% 20%;
+    --sidebar-ring: 254 50% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bouncy {
+    transition: var(--transition-bouncy);
+  }
+}

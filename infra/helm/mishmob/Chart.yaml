@@ -1,0 +1,30 @@
+apiVersion: v2
+name: mishmob
+description: A Helm chart for MishMob volunteer matching platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - mishmob
+  - volunteer
+  - django
+  - react
+
+home: https://github.com/mishmob/mishmob
+sources:
+  - https://github.com/mishmob/mishmob
+
+maintainers:
+  - name: MishMob Team
+    email: team@mishmob.com
+
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

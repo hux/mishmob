@@ -1,0 +1,108 @@
+# Default values for mishmob.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  environment: production
+  domain: mishmob.com
+
+backend:
+  replicaCount: 2
+  image:
+    repository: mishmob/backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 9000
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  
+  env:
+    DEBUG: "False"
+    ALLOWED_HOSTS: "api.mishmob.com"
+    CORS_ALLOWED_ORIGINS: "https://mishmob.com"
+  
+  secrets:
+    SECRET_KEY: "change-this-in-production"
+    DATABASE_NAME: "mishmob_db"
+    DATABASE_USER: "postgres"
+    DATABASE_PASSWORD: "change-this-password"
+
+frontend:
+  replicaCount: 2
+  image:
+    repository: mishmob/frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  
+  env:
+    VITE_API_URL: "https://api.mishmob.com"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: mishmob.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+    - host: api.mishmob.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: backend
+  tls:
+    - secretName: mishmob-tls
+      hosts:
+        - mishmob.com
+        - api.mishmob.com
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "change-this-password"
+    database: "mishmob_db"
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "change-this-password"
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
