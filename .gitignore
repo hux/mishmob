@@ -21,6 +21,26 @@ backend/staticfiles/
 backend/.coverage
 backend/htmlcov/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Vim
+*.swp
+*.swo
+*.swn
+.*.swp
+.*.swo
+.*.swn
+*~
+*.bak
+*.un~
+
 # Infrastructure
 infra/terraform/.terraform/
 infra/terraform/*.tfstate
@@ -36,9 +56,6 @@ infra/helm/requirements.lock
 .vscode/*
 !.vscode/extensions.json
 .idea/
-*.swp
-*.swo
-*~
 
 # OS
 .DS_Store
