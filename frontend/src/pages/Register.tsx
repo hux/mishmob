@@ -49,7 +49,11 @@ export function Register() {
     try {
       await register(formData);
     } catch (error) {
-      setError('Registration failed. Username or email may already be taken.');
+      if (error instanceof Error) {
+        setError(error.message || 'Registration failed. Please try again.');
+      } else {
+        setError('Registration failed. Username or email may already be taken.');
+      }
     } finally {
       setIsLoading(false);
     }

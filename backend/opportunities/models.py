@@ -303,7 +303,7 @@ class CrawledOpportunity(models.Model):
     # Source tracking
     source = models.ForeignKey(CrawlerSource, on_delete=models.CASCADE, related_name='crawled_opportunities')
     source_url = models.URLField(max_length=500, unique=True)
-    source_id = models.CharField(max_length=200, blank=True, help_text="ID from the source system")
+    external_id = models.CharField(max_length=200, blank=True, help_text="ID from the source system")
     
     # Raw data
     raw_data = models.JSONField(help_text="Complete raw data from crawler")

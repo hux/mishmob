@@ -343,10 +343,12 @@ export default function OpportunitiesPage() {
                 <DialogTitle className="text-2xl">{selectedOpportunity.title}</DialogTitle>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                   <span className="font-medium">{selectedOpportunity.organization}</span>
-                  <span className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-current text-yellow-500" />
-                    {selectedOpportunity.rating.toFixed(1)}
-                  </span>
+                  {selectedOpportunity.host_info && (
+                    <span className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-current text-yellow-500" />
+                      {selectedOpportunity.host_info.rating_average.toFixed(1)}
+                    </span>
+                  )}
                 </div>
               </DialogHeader>
 
@@ -357,6 +359,22 @@ export default function OpportunitiesPage() {
                   <p className="text-muted-foreground">{selectedOpportunity.description}</p>
                 </div>
 
+                {/* Impact Statement */}
+                {selectedOpportunity.impact_statement && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Your Impact</h3>
+                    <p className="text-muted-foreground">{selectedOpportunity.impact_statement}</p>
+                  </div>
+                )}
+
+                {/* Requirements */}
+                {selectedOpportunity.requirements && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Requirements</h3>
+                    <p className="text-muted-foreground">{selectedOpportunity.requirements}</p>
+                  </div>
+                )}
+
                 {/* Key Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
@@ -365,7 +383,7 @@ export default function OpportunitiesPage() {
                       <div>
                         <p className="font-medium">Location</p>
                         <p className="text-sm text-muted-foreground">
-                          {selectedOpportunity.is_remote ? 'Remote' : selectedOpportunity.location}
+                          {selectedOpportunity.is_remote ? 'Remote' : selectedOpportunity.location_name}
                           {!selectedOpportunity.is_remote && ` (${selectedOpportunity.location_zip})`}
                         </p>
                       </div>
@@ -375,7 +393,7 @@ export default function OpportunitiesPage() {
                       <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
                         <p className="font-medium">Time Commitment</p>
-                        <p className="text-sm text-muted-foreground">{selectedOpportunity.commitment}</p>
+                        <p className="text-sm text-muted-foreground">{selectedOpportunity.time_commitment}</p>
                       </div>
                     </div>
 
@@ -383,7 +401,9 @@ export default function OpportunitiesPage() {
                       <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
                         <p className="font-medium">Available Spots</p>
-                        <p className="text-sm text-muted-foreground">{selectedOpportunity.spots_available} positions available</p>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedOpportunity.roles?.reduce((total, role) => total + (role.slots_available - role.slots_filled), 0) || 0} positions available
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -414,6 +434,16 @@ export default function OpportunitiesPage() {
                         <p className="text-sm text-muted-foreground capitalize">{selectedOpportunity.status}</p>
                       </div>
                     </div>
+
+                    {selectedOpportunity.cause_area && (
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="font-medium">Cause Area</p>
+                          <p className="text-sm text-muted-foreground">{selectedOpportunity.cause_area}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -421,7 +451,10 @@ export default function OpportunitiesPage() {
                 <div>
                   <h3 className="font-semibold mb-3">Skills Required</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedOpportunity.skills.map((skill) => (
+                    {selectedOpportunity.roles?.flatMap(role => 
+                      role.required_skills.map(skill => skill.name)
+                    ).filter((skill, index, self) => self.indexOf(skill) === index)
+                    .map((skill) => (
                       <Badge key={skill} variant="secondary">{skill}</Badge>
                     ))}
                   </div>

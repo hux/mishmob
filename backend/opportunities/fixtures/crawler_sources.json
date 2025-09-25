@@ -1,0 +1,78 @@
+[
+  {
+    "model": "opportunities.crawlersource",
+    "pk": 1,
+    "fields": {
+      "name": "VolunteerMatch",
+      "source_type": "platform",
+      "base_url": "https://www.volunteermatch.org",
+      "crawler_class": "opportunities.crawlers.volunteermatch.VolunteerMatchCrawler",
+      "is_active": true,
+      "crawl_frequency_hours": 24,
+      "config": {
+        "location": "San Francisco, CA",
+        "radius": "25",
+        "keywords": ""
+      },
+      "headers": {},
+      "rate_limit_delay_seconds": 2.0,
+      "max_pages_per_crawl": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "opportunities.crawlersource",
+    "pk": 2,
+    "fields": {
+      "name": "Red Cross Bay Area",
+      "source_type": "nonprofit",
+      "base_url": "https://www.redcross.org/local/california/northern-california-coastal/volunteer.html",
+      "crawler_class": "opportunities.crawlers.generic.GenericNonprofitCrawler",
+      "is_active": true,
+      "crawl_frequency_hours": 48,
+      "config": {},
+      "headers": {},
+      "rate_limit_delay_seconds": 1.5,
+      "max_pages_per_crawl": 10,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "opportunities.crawlersource",
+    "pk": 3,
+    "fields": {
+      "name": "Habitat for Humanity SF",
+      "source_type": "nonprofit",
+      "base_url": "https://habitatgsf.org/volunteer/",
+      "crawler_class": "opportunities.crawlers.generic.GenericNonprofitCrawler",
+      "is_active": true,
+      "crawl_frequency_hours": 72,
+      "config": {},
+      "headers": {},
+      "rate_limit_delay_seconds": 1.5,
+      "max_pages_per_crawl": 10,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "opportunities.crawlersource",
+    "pk": 4,
+    "fields": {
+      "name": "SF Food Bank",
+      "source_type": "nonprofit",
+      "base_url": "https://www.sfmfoodbank.org/volunteer/",
+      "crawler_class": "opportunities.crawlers.generic.GenericNonprofitCrawler",
+      "is_active": true,
+      "crawl_frequency_hours": 48,
+      "config": {},
+      "headers": {},
+      "rate_limit_delay_seconds": 1.5,
+      "max_pages_per_crawl": 10,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
