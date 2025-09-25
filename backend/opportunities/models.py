@@ -103,6 +103,11 @@ class Opportunity(models.Model):
     featured = models.BooleanField(default=False)
     view_count = models.PositiveIntegerField(default=0)
     
+    # Crawler tracking
+    is_crawled = models.BooleanField(default=False)
+    external_source_url = models.URLField(max_length=500, blank=True)
+    last_verified_date = models.DateTimeField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     published_at = models.DateTimeField(null=True, blank=True)
@@ -236,3 +241,146 @@ class ProjectParticipant(models.Model):
     
     def __str__(self):
         return f"{self.volunteer.username} - {self.opportunity.title}"
+
+
+class CrawlerSource(models.Model):
+    """Sources for web crawling nonprofit opportunities"""
+    
+    SOURCE_TYPE_CHOICES = [
+        ('platform', 'Platform (VolunteerMatch, Idealist, etc.)'),
+        ('nonprofit', 'Individual Nonprofit Website'),
+        ('aggregator', 'Aggregator/Directory'),
+        ('rss', 'RSS Feed'),
+        ('api', 'API'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    source_type = models.CharField(max_length=20, choices=SOURCE_TYPE_CHOICES)
+    base_url = models.URLField(max_length=500)
+    crawler_class = models.CharField(max_length=100, help_text="Python class name for the crawler")
+    
+    is_active = models.BooleanField(default=True)
+    crawl_frequency_hours = models.PositiveIntegerField(default=24, help_text="Hours between crawls")
+    
+    # Configuration
+    config = models.JSONField(default=dict, blank=True, help_text="Crawler-specific configuration")
+    headers = models.JSONField(default=dict, blank=True, help_text="Custom headers for requests")
+    
+    # Rate limiting
+    rate_limit_delay_seconds = models.DecimalField(max_digits=4, decimal_places=1, default=1.0)
+    max_pages_per_crawl = models.PositiveIntegerField(default=100)
+    
+    # Statistics
+    last_crawl_time = models.DateTimeField(null=True, blank=True)
+    last_crawl_status = models.CharField(max_length=50, blank=True)
+    last_crawl_error = models.TextField(blank=True)
+    total_opportunities_found = models.PositiveIntegerField(default=0)
+    total_opportunities_imported = models.PositiveIntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_active', 'last_crawl_time']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.source_type})"
+
+
+class CrawledOpportunity(models.Model):
+    """Raw crawled opportunity data before processing"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('duplicate', 'Duplicate'),
+        ('imported', 'Imported'),
+    ]
+    
+    # Source tracking
+    source = models.ForeignKey(CrawlerSource, on_delete=models.CASCADE, related_name='crawled_opportunities')
+    source_url = models.URLField(max_length=500, unique=True)
+    source_id = models.CharField(max_length=200, blank=True, help_text="ID from the source system")
+    
+    # Raw data
+    raw_data = models.JSONField(help_text="Complete raw data from crawler")
+    
+    # Extracted fields
+    title = models.CharField(max_length=300)
+    organization_name = models.CharField(max_length=300)
+    organization_url = models.URLField(max_length=500, blank=True)
+    description = models.TextField()
+    
+    # Location
+    location_text = models.CharField(max_length=500, blank=True)
+    city = models.CharField(max_length=200, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    is_remote = models.BooleanField(default=False)
+    
+    # Dates
+    start_date_text = models.CharField(max_length=200, blank=True)
+    end_date_text = models.CharField(max_length=200, blank=True)
+    parsed_start_date = models.DateField(null=True, blank=True)
+    parsed_end_date = models.DateField(null=True, blank=True)
+    is_ongoing = models.BooleanField(default=False)
+    
+    # Details
+    time_commitment_text = models.CharField(max_length=300, blank=True)
+    skills_text = models.TextField(blank=True)
+    cause_areas_text = models.CharField(max_length=500, blank=True)
+    
+    # Processing
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    imported_opportunity = models.ForeignKey(Opportunity, on_delete=models.SET_NULL, null=True, blank=True)
+    duplicate_of = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Quality scoring
+    quality_score = models.DecimalField(max_digits=3, decimal_places=2, default=0, 
+                                       help_text="0-1 score based on data completeness")
+    validation_errors = models.JSONField(default=list, blank=True)
+    
+    # Timestamps
+    crawled_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-crawled_at']
+        indexes = [
+            models.Index(fields=['source', 'status']),
+            models.Index(fields=['status', 'quality_score']),
+            models.Index(fields=['organization_name']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.organization_name} ({self.status})"
+    
+    def calculate_quality_score(self):
+        """Calculate quality score based on data completeness"""
+        score = 0.0
+        weights = {
+            'title': 0.15,
+            'organization_name': 0.15,
+            'description': 0.20,
+            'location_text': 0.10,
+            'parsed_start_date': 0.15,
+            'time_commitment_text': 0.10,
+            'skills_text': 0.10,
+            'cause_areas_text': 0.05,
+        }
+        
+        for field, weight in weights.items():
+            value = getattr(self, field)
+            if value and (not isinstance(value, str) or value.strip()):
+                score += weight
+        
+        # Bonus for long descriptions
+        if len(self.description) > 200:
+            score = min(1.0, score + 0.05)
+        
+        self.quality_score = round(score, 2)
+        return self.quality_score

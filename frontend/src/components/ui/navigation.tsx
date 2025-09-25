@@ -33,18 +33,18 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#opportunities" className="text-muted-foreground hover:text-foreground transition-smooth">
+            <Link to="/opportunities" className="text-muted-foreground hover:text-foreground transition-smooth">
               Find Opportunities
-            </a>
-            <a href="#for-hosts" className="text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link to="/#for-hosts" className="text-muted-foreground hover:text-foreground transition-smooth">
               For Organizations
-            </a>
-            <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link to="/#how-it-works" className="text-muted-foreground hover:text-foreground transition-smooth">
               How It Works
-            </a>
-            <a href="#impact" className="text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link to="/#impact" className="text-muted-foreground hover:text-foreground transition-smooth">
               Impact
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Actions */}
@@ -119,18 +119,34 @@ const Navigation = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-background border-b border-border animate-fade-in">
           <div className="px-4 py-4 space-y-4">
-            <a href="#opportunities" className="block py-2 text-muted-foreground hover:text-foreground transition-smooth">
+            <Link 
+              to="/opportunities" 
+              className="block py-2 text-muted-foreground hover:text-foreground transition-smooth"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               Find Opportunities
-            </a>
-            <a href="#for-hosts" className="block py-2 text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link 
+              to="/#for-hosts" 
+              className="block py-2 text-muted-foreground hover:text-foreground transition-smooth"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               For Organizations
-            </a>
-            <a href="#how-it-works" className="block py-2 text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link 
+              to="/#how-it-works" 
+              className="block py-2 text-muted-foreground hover:text-foreground transition-smooth"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               How It Works
-            </a>
-            <a href="#impact" className="block py-2 text-muted-foreground hover:text-foreground transition-smooth">
+            </Link>
+            <Link 
+              to="/#impact" 
+              className="block py-2 text-muted-foreground hover:text-foreground transition-smooth"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               Impact
-            </a>
+            </Link>
             <div className="pt-4 border-t border-border space-y-2">
               {isAuthenticated && user ? (
                 <>

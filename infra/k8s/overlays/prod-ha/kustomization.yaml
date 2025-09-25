@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - ../../base
+
+images:
+  - name: mishmob/backend:latest
+    newName: 787643543720.dkr.ecr.us-east-1.amazonaws.com/mishmob/backend
+    newTag: latest
+  - name: mishmob/frontend:latest
+    newName: 787643543720.dkr.ecr.us-east-1.amazonaws.com/mishmob/frontend
+    newTag: latest
+
+replicas:
+  - name: web-backend
+    count: 2
+  - name: web-ui
+    count: 2
+  - name: redis
+    count: 2
+
+patches:
+  - target:
+      kind: Ingress
+      name: mishmob-ingress
+    patch: |-
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: mishmob.com
+      - op: replace
+        path: /spec/tls/0/hosts/1
+        value: api.mishmob.com
+      - op: replace
+        path: /spec/rules/0/host
+        value: mishmob.com
+      - op: replace
+        path: /spec/rules/1/host
+        value: api.mishmob.com
+
+patchesStrategicMerge:
+  - postgres-ha.yaml
+  - redis-ha.yaml

@@ -1,10 +1,4 @@
-import { 
-  apiClient, 
-  OpportunityListResponse, 
-  OpportunityListItem, 
-  OpportunityDetail,
-  ApplicationData 
-} from './api';
+import { opportunitiesApi, Opportunity, OpportunityListResponse } from './api';
 
 export interface OpportunityFilters {
   zip_code?: string;
@@ -20,31 +14,21 @@ export const opportunitiesService = {
    * Get list of opportunities with filters
    */
   async getOpportunities(filters?: OpportunityFilters): Promise<OpportunityListResponse> {
-    const params = {
-      ...filters,
-      status: filters?.status || 'open',
-      page: filters?.page || 1,
-      page_size: filters?.page_size || 20,
-    };
-    
-    const response = await apiClient.get<OpportunityListResponse>('/opportunities/', { params });
-    return response.data;
+    return opportunitiesApi.list(filters);
   },
 
   /**
    * Get featured opportunities
    */
-  async getFeaturedOpportunities(): Promise<OpportunityListItem[]> {
-    const response = await apiClient.get<OpportunityListItem[]>('/opportunities/featured');
-    return response.data;
+  async getFeaturedOpportunities(): Promise<Opportunity[]> {
+    return opportunitiesApi.getFeatured();
   },
 
   /**
    * Get opportunity details
    */
-  async getOpportunityById(opportunityId: string): Promise<OpportunityDetail> {
-    const response = await apiClient.get<OpportunityDetail>(`/opportunities/${opportunityId}`);
-    return response.data;
+  async getOpportunityById(opportunityId: string): Promise<Opportunity> {
+    return opportunitiesApi.getById(opportunityId);
   },
 
   /**
@@ -52,10 +36,10 @@ export const opportunitiesService = {
    */
   async applyToOpportunity(
     opportunityId: string, 
-    application: ApplicationData
-  ): Promise<{ message: string; application_id: number }> {
-    const response = await apiClient.post(`/opportunities/${opportunityId}/apply`, application);
-    return response.data;
+    roleId: string,
+    data: { cover_letter?: string; availability_notes?: string }
+  ): Promise<void> {
+    return opportunitiesApi.apply(opportunityId, roleId, data);
   },
 
   /**

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from ninja import NinjaAPI
 from api.urls import setup_api_routes
 
@@ -32,6 +33,7 @@ api = NinjaAPI(
 setup_api_routes(api)
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='http://localhost:5175/', permanent=False)),
     path('admin/', admin.site.urls),
     path('api/', api.urls),
 ]

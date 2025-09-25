@@ -1,0 +1,6 @@
+# Remove meilisearch deployment since it's not available in public ECR
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: meilisearch
+  $patch: delete

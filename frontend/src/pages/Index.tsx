@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/ui/navigation";
 import OpportunityCard from "@/components/ui/opportunity-card";
+import CollageHero from "@/components/CollageHero";
 import { 
   Heart, 
   Users, 
@@ -14,7 +15,6 @@ import {
   Star,
   CheckCircle2
 } from "lucide-react";
-import heroImage from "@/assets/hero-community.jpg";
 import skillsImage from "@/assets/skills-matching.jpg";
 import impactImage from "@/assets/impact-dashboard.jpg";
 import { useQuery } from "@tanstack/react-query";
@@ -31,73 +31,14 @@ const Index = () => {
     queryFn: () => opportunitiesService.getFeaturedOpportunities(),
   });
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-white">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 animate-fade-in">
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  Mobilize Your
-                  <span className="bg-gradient-hero bg-clip-text text-transparent"> Purpose</span>
-                </h1>
-                <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
-                  Connect with meaningful opportunities that match your unique skills. 
-                  Build stronger communities through purposeful action, one mission at a time.
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  variant="hero" 
-                  size="xl" 
-                  onClick={() => navigate('/register')}
-                >
-                  Find Your Mission
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="xl"
-                  onClick={() => navigate('/register')}
-                >
-                  For Organizations
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-8 pt-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {[1,2,3,4].map(i => (
-                      <div key={i} className="w-8 h-8 rounded-full bg-gradient-hero border-2 border-background" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">2,500+ active volunteers</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-secondary text-secondary" />
-                  <span className="text-sm font-medium">4.9/5 rating</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="relative animate-scale-in">
-              <img 
-                src={heroImage} 
-                alt="Community volunteers working together"
-                className="w-full rounded-2xl shadow-strong"
-              />
-              <div className="absolute inset-0 bg-gradient-hero opacity-20 rounded-2xl" />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Collage Hero Section */}
+      <CollageHero />
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 bg-background">
+      <section id="how-it-works" className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -126,7 +67,7 @@ const Index = () => {
                 description: "Develop new skills, track your impact, and unlock leadership opportunities."
               }
             ].map((step, index) => (
-              <Card key={index} className="text-center p-8 bg-gradient-card border-border/50 hover:shadow-medium transition-smooth">
+              <Card key={index} className="text-center p-8 bg-white border border-gray-200 hover:border-primary/30 hover:shadow-lg transition-all duration-300">
                 <CardContent className="space-y-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto">
                     {step.icon}
@@ -141,7 +82,7 @@ const Index = () => {
       </section>
 
       {/* Skills Matching Feature */}
-      <section className="py-20">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
@@ -170,8 +111,8 @@ const Index = () => {
                   "Skills-based learning pathways"
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0" />
-                    <span className="text-muted-foreground">{feature}</span>
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-gray-600">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -186,7 +127,7 @@ const Index = () => {
       </section>
 
       {/* Featured Opportunities */}
-      <section id="opportunities" className="py-20 bg-background">
+      <section id="opportunities" className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -277,7 +218,7 @@ const Index = () => {
       </section>
 
       {/* Impact Dashboard */}
-      <section id="impact" className="py-20">
+      <section id="impact" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -299,11 +240,11 @@ const Index = () => {
                   { label: "Skills Developed", value: "1.8K", icon: <BookOpen /> }
                 ].map((stat, index) => (
                   <div key={index} className="text-center space-y-2">
-                    <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-accent mx-auto">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mx-auto">
                       {stat.icon}
                     </div>
-                    <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                    <div className="text-sm text-gray-600">{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -321,7 +262,7 @@ const Index = () => {
       </section>
 
       {/* For Organizations CTA */}
-      <section id="for-hosts" className="py-20 bg-muted">
+      <section id="for-hosts" className="py-20 bg-[#19D3DA]/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="space-y-8 max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -332,9 +273,12 @@ const Index = () => {
               Our platform helps you build stronger teams and achieve greater impact.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="xl">
+              <Button 
+                size="xl"
+                className="bg-[#19D3DA] hover:bg-[#19D3DA]/90 text-[#373A40] font-semibold border-0"
+              >
                 Host Opportunities
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
               <Button variant="outline" size="xl">
                 Learn More
@@ -345,17 +289,17 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-foreground text-background py-12">
+      <footer className="bg-[#373A40] text-[#EEEEEE] py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <div className="bg-gradient-hero rounded-lg p-2">
-                  <Heart className="h-6 w-6 text-white" />
+                <div className="bg-[#19D3DA] rounded-lg p-2">
+                  <Heart className="h-6 w-6 text-[#373A40]" />
                 </div>
                 <span className="text-xl font-bold">MishMob</span>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-[#EEEEEE]/70">
                 Mobilizing purpose, meaning, and belonging through community action.
               </p>
             </div>
@@ -379,7 +323,7 @@ const Index = () => {
                 <ul className="space-y-2">
                   {section.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
-                      <a href="#" className="text-muted-foreground hover:text-background transition-smooth">
+                      <a href="#" className="text-[#EEEEEE]/60 hover:text-[#19D3DA] transition-all duration-200">
                         {link}
                       </a>
                     </li>
@@ -389,8 +333,8 @@ const Index = () => {
             ))}
           </div>
           
-          <div className="border-t border-border/20 mt-12 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 MishMob. Building stronger communities through purposeful action.</p>
+          <div className="border-t border-[#686D76] mt-12 pt-8 text-center text-[#EEEEEE]/60">
+            <p>&copy; 2025 MishMob. Building stronger communities through purposeful action.</p>
           </div>
         </div>
       </footer>

@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, User, RegisterData, getErrorMessage } from '@/services';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { authApi, User, LoginCredentials, RegisterData } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -15,129 +13,53 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
-  // Check if user is authenticated on mount
-  const checkAuth = useCallback(async () => {
+  const refreshUser = useCallback(async () => {
     try {
-      if (authService.isAuthenticated()) {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
-      }
+      const currentUser = await authApi.getCurrentUser();
+      setUser(currentUser);
     } catch (error) {
-      console.error('Failed to get current user:', error);
-      // Clear invalid tokens
-      authService.logout();
-    } finally {
-      setIsLoading(false);
+      setUser(null);
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const initAuth = async () => {
+      setIsLoading(true);
+      await refreshUser();
+      setIsLoading(false);
+    };
 
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await authService.login(username, password);
-      
-      // Fetch full user details after login
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      
-      toast({
-        title: 'Welcome back!',
-        description: `Logged in as ${currentUser.first_name} ${currentUser.last_name}`,
-      });
-      
-      // Redirect based on user type
-      if (currentUser.user_type === 'volunteer') {
-        navigate('/dashboard');
-      } else if (currentUser.user_type === 'host') {
-        navigate('/host-dashboard');
-      } else {
-        navigate('/');
-      }
-    } catch (error) {
-      const message = getErrorMessage(error);
-      toast({
-        title: 'Login failed',
-        description: message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    initAuth();
+  }, [refreshUser]);
+
+  const login = async (credentials: LoginCredentials) => {
+    await authApi.login(credentials);
+    await refreshUser();
   };
 
   const register = async (data: RegisterData) => {
-    try {
-      const newUser = await authService.register(data);
-      
-      // Automatically log in after registration
-      await login(data.username, data.password);
-      
-      toast({
-        title: 'Account created successfully!',
-        description: 'Welcome to MishMob!',
-      });
-    } catch (error) {
-      const message = getErrorMessage(error);
-      toast({
-        title: 'Registration failed',
-        description: message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    const newUser = await authApi.register(data);
+    // After registration, log them in
+    await authApi.login({
+      username: data.username,
+      password: data.password,
+    });
+    await refreshUser();
   };
 
   const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-      navigate('/');
-      
-      toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out.',
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear local state even if API call fails
-      setUser(null);
-      navigate('/');
-    }
-  };
-
-  const refreshUser = async () => {
-    try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-      throw error;
-    }
+    await authApi.logout();
+    setUser(null);
   };
 
   const value = {
     user,
-    isAuthenticated: !!user,
     isLoading,
+    isAuthenticated: !!user,
     login,
     register,
     logout,
@@ -145,4 +67,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
