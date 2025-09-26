@@ -31,12 +31,24 @@ RUN pip install --upgrade pip && \
 # Copy project files
 COPY . /app/
 
-# Create non-root user
-RUN useradd -m -u 1000 django && chown -R django:django /app
-USER django
+# Set dummy environment variables for collectstatic during build
+ENV SECRET_KEY="dummy-secret-key-for-build" \
+    DATABASE_NAME="dummy" \
+    DATABASE_USER="dummy" \
+    DATABASE_PASSWORD="dummy" \
+    DATABASE_HOST="dummy" \
+    DATABASE_PORT="5432"
 
-# Collect static files
-RUN python manage.py collectstatic --noinput || true
+# Create staticfiles directory and collect static files as root
+RUN mkdir -p /app/staticfiles && \
+    python manage.py collectstatic --noinput || echo "Collectstatic failed, continuing..."
+
+# Create non-root user and change ownership
+RUN useradd -m -u 1000 django && \
+    chown -R django:django /app
+
+# Switch to non-root user
+USER django
 
 # Expose port
 EXPOSE 8000

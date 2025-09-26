@@ -45,14 +45,8 @@ export function useRedirectIfAuthenticated(redirectTo = '/dashboard') {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      // Redirect based on user type
-      if (user.user_type === 'volunteer') {
-        navigate('/dashboard');
-      } else if (user.user_type === 'host') {
-        navigate('/host-dashboard');
-      } else {
-        navigate(redirectTo);
-      }
+      // Always redirect to dashboard (it will show the appropriate view based on user type)
+      navigate('/dashboard');
     }
   }, [isAuthenticated, user, isLoading, navigate, redirectTo]);
 

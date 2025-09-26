@@ -79,6 +79,13 @@ build_and_push() {
     
     log_info "Building $service image..."
     
+    # Set build args for frontend
+    local build_args=""
+    if [ "$service" == "frontend" ] && [ -n "$VITE_API_URL" ]; then
+        build_args="--build-arg VITE_API_URL=$VITE_API_URL"
+        log_info "Using VITE_API_URL: $VITE_API_URL"
+    fi
+    
     # Build for multiple platforms if buildx is available and not in single platform mode
     if docker buildx version &> /dev/null && [ "$SINGLE_PLATFORM" != "true" ]; then
         log_info "Using Docker Buildx for multi-platform build"
@@ -96,6 +103,7 @@ build_and_push() {
             --tag $ECR_REGISTRY/mishmob/$service:$IMAGE_TAG \
             --tag $ECR_REGISTRY/mishmob/$service:latest \
             --file $dockerfile \
+            $build_args \
             --push \
             $context 2>/tmp/buildx-error.log; then
             log_info "Multi-platform build successful"
@@ -108,6 +116,7 @@ build_and_push() {
                 --tag $ECR_REGISTRY/mishmob/$service:$IMAGE_TAG \
                 --tag $ECR_REGISTRY/mishmob/$service:latest \
                 --file $dockerfile \
+                $build_args \
                 --push \
                 $context
         fi
@@ -118,6 +127,7 @@ build_and_push() {
             --tag $ECR_REGISTRY/mishmob/$service:$IMAGE_TAG \
             --tag $ECR_REGISTRY/mishmob/$service:latest \
             --file $dockerfile \
+            $build_args \
             $context
         
         log_info "Pushing $service image..."
@@ -142,7 +152,7 @@ log_info "Starting build process..."
 build_and_push "backend" "./backend/Dockerfile" "./backend"
 
 # Frontend
-build_and_push "frontend" "./frontend/Dockerfile" "./frontend"
+VITE_API_URL="https://mishmob.com/api" build_and_push "frontend" "./frontend/Dockerfile" "./frontend"
 
 # Summary
 log_info "Build and push complete!"

@@ -1,0 +1,4 @@
+We are working on a software project and we want to provide a KYC service to non-profit organizations, as a way to verify a person before allowing them to video connect with someone new.
+The purpose is to provide a safe process of verifying a person before allowing their initial video connection to occur.
+
+

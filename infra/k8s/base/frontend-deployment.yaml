@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
       - name: web-ui
-        image: mishmob/frontend:latest
-        imagePullPolicy: IfNotPresent
+        image: 787643543720.dkr.ecr.us-east-1.amazonaws.com/mishmob/frontend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http

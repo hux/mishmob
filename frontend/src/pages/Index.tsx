@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import Navigation from "@/components/ui/navigation";
 import OpportunityCard from "@/components/ui/opportunity-card";
 import CollageHero from "@/components/CollageHero";
 import { 
@@ -32,8 +31,6 @@ const Index = () => {
   });
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
-      
       {/* Collage Hero Section */}
       <CollageHero />
 

@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import Navigation from '@/components/ui/navigation';
-import { MapPin, Clock, Users, Star, Search, Filter, Calendar, Building, Globe, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Users, Star, Search, Filter, Calendar, Building, Globe, CheckCircle2, AlertCircle, Loader2, SlidersHorizontal, X } from 'lucide-react';
 import { opportunitiesApi } from '@/services/api';
 import type { Opportunity, OpportunityDetail, Role } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { SkillMatchBreakdown } from '@/components/SkillMatchBreakdown';
+import { OpportunityCard } from '@/components/OpportunityCard';
 
 export default function OpportunitiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,6 +33,7 @@ export default function OpportunitiesPage() {
   const [availabilityNotes, setAvailabilityNotes] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,9 +41,27 @@ export default function OpportunitiesPage() {
     zip_code: searchParams.get('zip') || '',
     cause_area: searchParams.get('cause') || '',
     skills: searchParams.get('skills') || '',
+    remote_only: searchParams.get('remote') === 'true',
+    status: searchParams.get('status') || 'open',
   });
 
+  // Update filters when URL params change
   useEffect(() => {
+    setFilters({
+      zip_code: searchParams.get('zip') || '',
+      cause_area: searchParams.get('cause') || '',
+      skills: searchParams.get('skills') || '',
+      remote_only: searchParams.get('remote') === 'true',
+      status: searchParams.get('status') || 'open',
+    });
+  }, [searchParams]);
+
+  useEffect(() => {
+    // Reset to page 1 when search params change (but not when page changes)
+    const pageParam = searchParams.get('page');
+    if (!pageParam && currentPage !== 1) {
+      setCurrentPage(1);
+    }
     fetchOpportunities();
   }, [currentPage, searchParams]);
 
@@ -49,10 +69,14 @@ export default function OpportunitiesPage() {
     try {
       setLoading(true);
       setError(null);
+      
+      // Get filter values from URL params instead of filters state
       const response = await opportunitiesApi.list({
-        zip_code: filters.zip_code || undefined,
-        cause_area: filters.cause_area || undefined,
-        skills: filters.skills || undefined,
+        zip_code: searchParams.get('zip') || undefined,
+        cause_area: searchParams.get('cause') || undefined,
+        skills: searchParams.get('skills') || undefined,
+        remote_only: searchParams.get('remote') === 'true' || undefined,
+        status: searchParams.get('status') || 'open',
         page: currentPage,
         page_size: 12,
       });
@@ -71,8 +95,25 @@ export default function OpportunitiesPage() {
     if (filters.zip_code) params.set('zip', filters.zip_code);
     if (filters.cause_area) params.set('cause', filters.cause_area);
     if (filters.skills) params.set('skills', filters.skills);
+    if (filters.remote_only) params.set('remote', 'true');
+    if (filters.status && filters.status !== 'all') params.set('status', filters.status);
     setSearchParams(params);
     setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({ zip_code: '', cause_area: '', skills: '', remote_only: false, status: 'open' });
+    setSearchParams(new URLSearchParams());
+  };
+
+  const activeFiltersCount = () => {
+    let count = 0;
+    if (filters.zip_code) count++;
+    if (filters.cause_area) count++;
+    if (filters.skills) count++;
+    if (filters.remote_only) count++;
+    if (filters.status && filters.status !== 'open') count++;
+    return count;
   };
 
   const handleViewDetails = async (opportunity: Opportunity) => {
@@ -168,8 +209,6 @@ export default function OpportunitiesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <div className="mb-8">
@@ -181,41 +220,128 @@ export default function OpportunitiesPage() {
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by skills..."
+                placeholder="Search by title, organization, skills, or keywords..."
                 value={filters.skills}
                 onChange={(e) => setFilters({ ...filters, skills: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-10"
               />
             </div>
-            <Input
-              placeholder="ZIP Code"
-              value={filters.zip_code}
-              onChange={(e) => setFilters({ ...filters, zip_code: e.target.value })}
-              className="md:w-32"
-            />
-            <Select
-              value={filters.cause_area || "all"}
-              onValueChange={(value) => setFilters({ ...filters, cause_area: value === "all" ? "" : value })}
-            >
-              <SelectTrigger className="md:w-48">
-                <SelectValue placeholder="Cause Area" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Causes</SelectItem>
-                {causeAreas.map((area) => (
-                  <SelectItem key={area} value={area}>{area}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleSearch} className="md:w-auto">
-              <Filter className="h-4 w-4 mr-2" />
-              Apply Filters
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSearch} 
+                className="whitespace-nowrap"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="whitespace-nowrap"
+              >
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Filters
+                {activeFiltersCount() > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {activeFiltersCount()}
+                  </Badge>
+                )}
+              </Button>
+              {activeFiltersCount() > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearFilters}
+                  title="Clear all filters"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Expandable Filters */}
+          {showFilters && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="zip">Location (ZIP Code)</Label>
+                    <Input
+                      id="zip"
+                      placeholder="e.g., 94105"
+                      value={filters.zip_code}
+                      onChange={(e) => setFilters({ ...filters, zip_code: e.target.value })}
+                      className="mt-2"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="cause">Cause Area</Label>
+                    <Select
+                      value={filters.cause_area || "all"}
+                      onValueChange={(value) => setFilters({ ...filters, cause_area: value === "all" ? "" : value })}
+                    >
+                      <SelectTrigger id="cause" className="mt-2">
+                        <SelectValue placeholder="All Causes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Causes</SelectItem>
+                        {causeAreas.map((area) => (
+                          <SelectItem key={area} value={area}>{area}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={filters.status}
+                      onValueChange={(value) => setFilters({ ...filters, status: value })}
+                    >
+                      <SelectTrigger id="status" className="mt-2">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.remote_only}
+                        onChange={(e) => setFilters({ ...filters, remote_only: e.target.checked })}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">Remote Only</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-4 gap-2">
+                  <Button variant="outline" onClick={() => setShowFilters(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => { handleSearch(); setShowFilters(false); }}>
+                    Apply Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Results Count */}
@@ -232,82 +358,70 @@ export default function OpportunitiesPage() {
           </div>
         )}
 
-        {/* Opportunities Grid */}
-        {!loading && !error && (
+        {/* Loading State */}
+        {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {opportunities.map((opportunity) => (
-              <Card key={opportunity.id} className="hover:shadow-lg transition-shadow">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i}>
                 <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="text-xl">{opportunity.title}</CardTitle>
-                    {opportunity.featured && (
-                      <Badge variant="secondary">Featured</Badge>
-                    )}
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
                   </div>
-                  <CardDescription className="flex items-center gap-4 text-sm">
-                    <span className="font-medium">{opportunity.organization}</span>
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-current" />
-                      {opportunity.rating.toFixed(1)}
-                    </span>
-                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {opportunity.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {opportunity.skills.slice(0, 3).map((skill) => (
-                      <Badge key={skill} variant="outline">{skill}</Badge>
-                    ))}
-                    {opportunity.skills.length > 3 && (
-                      <Badge variant="outline">+{opportunity.skills.length - 3}</Badge>
-                    )}
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="h-16 bg-gray-200 rounded animate-pulse" />
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-gray-200 rounded w-16 animate-pulse" />
+                      <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded animate-pulse" />
                   </div>
-
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{opportunity.is_remote ? 'Remote' : opportunity.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{opportunity.commitment}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      <span>{opportunity.spots_available} spots available</span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    className="w-full" 
-                    variant={opportunity.spots_available > 0 ? "default" : "secondary"}
-                    disabled={opportunity.spots_available === 0}
-                    onClick={() => handleViewDetails(opportunity)}
-                  >
-                    {opportunity.spots_available > 0 ? 'View Details' : 'No Spots Available'}
-                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
+        {/* Opportunities Grid */}
+        {!loading && !error && opportunities.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {opportunities.map((opportunity) => (
+              <OpportunityCard 
+                key={opportunity.id}
+                opportunity={opportunity}
+                onViewDetails={handleViewDetails}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Empty State */}
         {!loading && !error && opportunities.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground mb-4">
-              No opportunities found matching your criteria
-            </p>
-            <Button onClick={() => {
-              setFilters({ zip_code: '', cause_area: '', skills: '' });
-              setSearchParams(new URLSearchParams());
-            }}>
-              Clear Filters
-            </Button>
-          </div>
+          <Card className="text-center py-16">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <Search className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold">No opportunities found</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                {activeFiltersCount() > 0 
+                  ? "Try adjusting your filters or search terms to find more opportunities."
+                  : "Check back soon for new volunteer opportunities in your area."}
+              </p>
+              {activeFiltersCount() > 0 && (
+                <Button onClick={clearFilters} variant="outline">
+                  <X className="h-4 w-4 mr-2" />
+                  Clear All Filters
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Pagination */}
@@ -446,6 +560,19 @@ export default function OpportunitiesPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Skill Match Breakdown */}
+                {isAuthenticated && user?.user_type === 'volunteer' && (
+                  <SkillMatchBreakdown 
+                    opportunityId={selectedOpportunity.id}
+                    requiredSkills={selectedOpportunity.roles?.flatMap(role => 
+                      role.required_skills.map(skill => ({ name: skill.name }))
+                    ).filter((skill, index, self) => 
+                      self.findIndex(s => s.name === skill.name) === index
+                    ) || []}
+                    matchScore={selectedOpportunity.match_score}
+                  />
+                )}
 
                 {/* Skills Required */}
                 <div>

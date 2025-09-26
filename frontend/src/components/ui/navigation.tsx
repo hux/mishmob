@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, Heart, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, Heart, LogOut, LayoutDashboard, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -81,6 +81,12 @@ const Navigation = () => {
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
+                  {user.user_type === 'host' && (
+                    <DropdownMenuItem onClick={() => navigate('/opportunities/create')}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Opportunity
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />

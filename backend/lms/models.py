@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 User = get_user_model()
@@ -30,6 +32,21 @@ class Course(models.Model):
     estimated_duration = models.PositiveIntegerField(help_text="Duration in minutes")
     is_required = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_published = models.BooleanField(default=False)
+    
+    # Course metadata
+    thumbnail = models.ImageField(upload_to='course_thumbnails/', null=True, blank=True)
+    category = models.CharField(max_length=100, blank=True)
+    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags")
+    
+    # Certificate settings
+    provides_certificate = models.BooleanField(default=True)
+    certificate_template = models.CharField(max_length=50, default='default')
+    passing_score = models.IntegerField(
+        default=80,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Minimum score percentage for certificate"
+    )
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_courses')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -139,3 +156,145 @@ class ModuleProgress(models.Model):
     
     def __str__(self):
         return f"{self.enrollment.user.username} - {self.module.title}"
+
+
+class Quiz(models.Model):
+    """Quiz for course modules"""
+    module = models.OneToOneField(Module, on_delete=models.CASCADE, related_name='quiz')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    passing_score = models.IntegerField(
+        default=70,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    max_attempts = models.IntegerField(default=3, help_text="0 for unlimited attempts")
+    time_limit_minutes = models.IntegerField(null=True, blank=True)
+    randomize_questions = models.BooleanField(default=False)
+    show_correct_answers = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Quiz: {self.title}"
+
+
+class Question(models.Model):
+    """Quiz questions"""
+    QUESTION_TYPE_CHOICES = [
+        ('multiple_choice', 'Multiple Choice'),
+        ('true_false', 'True/False'),
+        ('short_answer', 'Short Answer'),
+        ('essay', 'Essay'),
+    ]
+    
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField()
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPE_CHOICES)
+    points = models.IntegerField(default=1)
+    order = models.IntegerField(default=0)
+    explanation = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+    
+    def __str__(self):
+        return self.question_text[:50]
+
+
+class Answer(models.Model):
+    """Answer choices for questions"""
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
+    answer_text = models.TextField()
+    is_correct = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return self.answer_text[:50]
+
+
+class QuizAttempt(models.Model):
+    """Track quiz attempts"""
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    passed = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-started_at']
+        
+    def calculate_score(self):
+        """Calculate the final score"""
+        total_points = 0
+        earned_points = 0
+        
+        for answer in self.answers.all():
+            total_points += answer.question.points
+            if answer.is_correct:
+                earned_points += answer.question.points
+        
+        if total_points > 0:
+            self.score = (earned_points / total_points) * 100
+            self.passed = self.score >= self.quiz.passing_score
+        else:
+            self.score = 0
+            self.passed = False
+            
+        self.completed_at = timezone.now()
+        self.save()
+
+
+class QuizAnswer(models.Model):
+    """User answers for quiz questions"""
+    attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    
+    # For multiple choice
+    selected_answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # For text answers
+    text_answer = models.TextField(blank=True)
+    
+    is_correct = models.BooleanField(default=False)
+    points_earned = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = [['attempt', 'question']]
+
+
+class Certificate(models.Model):
+    """Course completion certificates"""
+    enrollment = models.OneToOneField(Enrollment, on_delete=models.CASCADE, related_name='certificate')
+    certificate_id = models.UUIDField(default=uuid.uuid4, unique=True)
+    issued_date = models.DateTimeField(auto_now_add=True)
+    
+    # Certificate data
+    user_name = models.CharField(max_length=200)
+    course_title = models.CharField(max_length=200)
+    completion_date = models.DateField()
+    final_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    
+    # Verification
+    verification_url = models.URLField(max_length=500, blank=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['certificate_id']),
+        ]
+    
+    def __str__(self):
+        return f"Certificate for {self.user_name} - {self.course_title}"
+    
+    def get_verification_url(self):
+        """Generate verification URL"""
+        from django.urls import reverse
+        from django.contrib.sites.models import Site
+        
+        current_site = Site.objects.get_current()
+        path = reverse('verify-certificate', kwargs={'certificate_id': str(self.certificate_id)})
+        return f"https://{current_site.domain}{path}"

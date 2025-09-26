@@ -74,3 +74,4 @@ lerna-debug.log*
 backups/
 node_modules/
 .env.*
+package-lock.json

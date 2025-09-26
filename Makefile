@@ -11,17 +11,56 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # Development
-dev: ## Start local development environment with docker-compose
+dev: ## Start ALL local development services (DB, Backend, Frontend, Redis, Meilisearch)
+	@echo "Starting all local development services..."
+	@echo "This will start:"
+	@echo "  - PostgreSQL on port 5433"
+	@echo "  - Backend API on http://localhost:8001"
+	@echo "  - Frontend on http://localhost:8080"
+	@echo "  - Meilisearch on http://localhost:7701"
+	@echo "  - Redis on port 6380"
+	@echo ""
 	docker-compose up -d
+	@echo ""
+	@echo "Services starting up... Check status with 'make dev-status'"
+	@echo "View logs with 'make dev-logs'"
+	@echo ""
+	@echo "Once ready, access the app at http://localhost:8080"
 
-dev-down: ## Stop local development environment
+dev-status: ## Show status of development services
+	@docker-compose ps
+
+dev-down: ## Stop all local development services
 	docker-compose down
 
-dev-logs: ## Show development logs
-	docker-compose logs -f
+dev-logs: ## Show development logs (use dev-logs backend/web/db/search/redis for specific service)
+	docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
 
 dev-build: ## Rebuild development containers
 	docker-compose build
+
+dev-reset: ## Reset development environment (removes volumes)
+	docker-compose down -v
+	docker-compose up -d
+
+dev-migrate: ## Run Django migrations
+	docker-compose exec backend python manage.py migrate
+
+dev-shell: ## Open Django shell
+	docker-compose exec backend python manage.py shell
+
+dev-bash: ## Open bash shell in backend container
+	docker-compose exec backend bash
+
+dev-populate: ## Populate sample data
+	docker-compose exec backend python manage.py populate_opportunities
+
+dev-createsuperuser: ## Create Django superuser
+	docker-compose exec backend python manage.py createsuperuser
+
+# Prevent make from treating service names as targets
+%:
+	@:
 
 # Production builds
 build-local: ## Build Docker images locally
@@ -42,6 +81,9 @@ deploy: ## Deploy to production Kubernetes
 	@echo "  Tag: $(IMAGE_TAG)"
 	@echo ""
 	ECR_REGISTRY=$(ECR_REGISTRY) IMAGE_TAG=$(IMAGE_TAG) ./scripts/deploy-production.sh
+
+force-update: ## Force update deployments to pull latest images
+	./scripts/force-update.sh
 
 # Production management
 status: ## Show production deployment status

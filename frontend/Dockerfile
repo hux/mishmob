@@ -13,6 +13,12 @@ RUN npm ci --include=optional
 # Copy source code
 COPY . .
 
+# Accept build-time environment variables
+ARG VITE_API_URL
+
+# Set environment variables for the build
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Build the app
 RUN npm run build
 

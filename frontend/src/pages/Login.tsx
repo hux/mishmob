@@ -24,7 +24,7 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      await login(username, password);
+      await login({ username, password });
     } catch (error) {
       setError('Invalid username or password. Please try again.');
     } finally {

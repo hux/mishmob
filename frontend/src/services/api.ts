@@ -12,6 +12,7 @@ export interface User {
   is_verified: boolean;
   profile_picture?: string;
   zip_code?: string;
+  organization_id?: number;
 }
 
 export interface LoginCredentials {
@@ -55,6 +56,7 @@ export interface Opportunity {
   status: string;
   is_remote: boolean;
   featured: boolean;
+  match_score?: number;
 }
 
 export interface OpportunityDetail extends Opportunity {
@@ -96,6 +98,43 @@ export interface SkillInfo {
   category: string;
 }
 
+export interface CreateOpportunityData {
+  title: string;
+  description: string;
+  cause_area: string;
+  start_date: string;
+  end_date: string;
+  location_name: string;
+  location_address: string;
+  location_zip: string;
+  is_remote: boolean;
+  impact_statement: string;
+  requirements: string;
+  time_commitment: string;
+  roles: CreateRoleData[];
+}
+
+export interface CreateRoleData {
+  title: string;
+  description: string;
+  responsibilities?: string;
+  slots_available: number;
+  time_commitment?: string;
+  required_skills: string[];
+  developed_skills?: string[];
+}
+
+export interface HostProfileData {
+  organization_name: string;
+  organization_type?: string;
+  website?: string;
+  description: string;
+  address_line1: string;
+  city: string;
+  state: string;
+  zip_code: string;
+}
+
 export interface ApplicationResponse {
   message: string;
   application_id: string;
@@ -131,6 +170,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   
   const headers = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
@@ -182,6 +222,72 @@ export const authApi = {
   async getCurrentUser(): Promise<User> {
     return fetchWithAuth('/auth/me');
   },
+
+  async createOrUpdateHostProfile(data: HostProfileData): Promise<{
+    message: string;
+    organization_id: number;
+    organization_name: string;
+  }> {
+    return fetchWithAuth('/auth/host-profile', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+// Skills API
+export interface SkillInfo {
+  id: number;
+  name: string;
+  category: string;
+}
+
+export interface UserSkillInfo {
+  id: number;
+  skill: SkillInfo;
+  proficiency_level?: string;
+  is_verified?: boolean;
+}
+
+export const skillsApi = {
+  async getAllSkills(): Promise<SkillInfo[]> {
+    return fetchWithAuth('/skills/all');
+  },
+
+  async searchSkills(query: string): Promise<SkillInfo[]> {
+    return fetchWithAuth(`/skills/search?q=${encodeURIComponent(query)}`);
+  },
+
+  async getMySkills(): Promise<UserSkillInfo[]> {
+    return fetchWithAuth('/skills/my-skills');
+  },
+
+  async addSkill(skillName: string, proficiencyLevel?: string): Promise<any> {
+    return fetchWithAuth('/skills/add', {
+      method: 'POST',
+      body: JSON.stringify({
+        skill_name: skillName,
+        proficiency_level: proficiencyLevel || 'intermediate',
+      }),
+    });
+  },
+
+  async removeSkill(skillId: number): Promise<any> {
+    return fetchWithAuth('/skills/remove', {
+      method: 'POST',
+      body: JSON.stringify({ skill_id: skillId }),
+    });
+  },
+
+  async updateProficiency(skillId: number, proficiencyLevel: string): Promise<any> {
+    return fetchWithAuth(`/skills/update-proficiency?skill_id=${skillId}&proficiency_level=${proficiencyLevel}`, {
+      method: 'POST',
+    });
+  },
+
+  async getPopularSkills(limit?: number): Promise<Array<{ skill: SkillInfo; user_count: number }>> {
+    return fetchWithAuth(`/skills/popular?limit=${limit || 10}`);
+  },
 };
 
 // Opportunities API
@@ -190,6 +296,7 @@ export const opportunitiesApi = {
     zip_code?: string;
     skills?: string;
     cause_area?: string;
+    remote_only?: boolean;
     status?: string;
     page?: number;
     page_size?: number;
@@ -222,5 +329,328 @@ export const opportunitiesApi = {
       method: 'POST',
       body: JSON.stringify({ role_id: roleId, ...data }),
     });
+  },
+
+  async create(data: CreateOpportunityData): Promise<{
+    message: string;
+    opportunity_id: string;
+    status: string;
+  }> {
+    return fetchWithAuth('/opportunities', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async publish(opportunityId: string): Promise<{
+    message: string;
+    opportunity_id: string;
+  }> {
+    return fetchWithAuth(`/opportunities/${opportunityId}/publish`, {
+      method: 'POST',
+    });
+  },
+
+  async getRecommendations(params?: {
+    page?: number;
+    page_size?: number;
+  }): Promise<OpportunityListResponse> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    
+    return fetchWithAuth(`/opportunities/recommendations?${queryParams}`);
+  },
+
+  async getMatchScore(opportunityId: string): Promise<{
+    match_score: number;
+    required_skills: string[];
+    matched_skills: string[];
+    missing_skills: string[];
+    user_has_skills: boolean;
+  }> {
+    return fetchWithAuth(`/opportunities/${opportunityId}/match-score`);
+  },
+};
+
+// Messages API
+export interface MessageUser {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture?: string;
+  user_type: string;
+  is_online: boolean;
+}
+
+export interface Message {
+  id: number;
+  conversation_id: number;
+  sender: MessageUser;
+  content: string;
+  created_at: string;
+  is_read: boolean;
+  read_at?: string;
+  attachment?: string;
+  attachment_name?: string;
+}
+
+export interface Conversation {
+  id: number;
+  subject: string;
+  is_group: boolean;
+  participants: MessageUser[];
+  last_message?: Message;
+  unread_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationListResponse {
+  conversations: Conversation[];
+  total: number;
+}
+
+export interface MessageListResponse {
+  messages: Message[];
+  total: number;
+  has_more: boolean;
+}
+
+export interface CreateConversationRequest {
+  participant_ids: number[];
+  subject?: string;
+  initial_message: string;
+}
+
+export const messagesApi = {
+  async getConversations(page: number = 1, search?: string): Promise<ConversationListResponse> {
+    const params = new URLSearchParams({ page: page.toString() });
+    if (search) params.append('search', search);
+    return fetchWithAuth(`/messages/conversations?${params}`);
+  },
+
+  async getMessages(conversationId: number, beforeId?: number, limit: number = 50): Promise<MessageListResponse> {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (beforeId) params.append('before_id', beforeId.toString());
+    return fetchWithAuth(`/messages/conversations/${conversationId}/messages?${params}`);
+  },
+
+  async sendMessage(conversationId: number, content: string): Promise<Message> {
+    return fetchWithAuth(`/messages/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  async createConversation(data: CreateConversationRequest): Promise<Conversation> {
+    return fetchWithAuth('/messages/conversations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async markConversationRead(conversationId: number): Promise<{ success: boolean; marked_count: number }> {
+    return fetchWithAuth(`/messages/conversations/${conversationId}/read`, {
+      method: 'POST',
+    });
+  },
+
+  async searchUsers(query: string): Promise<MessageUser[]> {
+    return fetchWithAuth(`/messages/users/search?q=${encodeURIComponent(query)}`);
+  },
+};
+
+// LMS API
+export interface CourseListItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  audience_type: string;
+  difficulty_level: string;
+  estimated_duration: number;
+  category?: string;
+  thumbnail_url?: string;
+  is_published: boolean;
+  is_enrolled: boolean;
+  progress_percentage?: number;
+  modules_count: number;
+  enrolled_count: number;
+}
+
+export interface Module {
+  id: number;
+  title: string;
+  content_type: string;
+  duration: number;
+  display_order: number;
+  is_completed?: boolean;
+  quiz_id?: number;
+}
+
+export interface CourseDetail extends CourseListItem {
+  created_by?: string;
+  created_at: string;
+  modules: Module[];
+  provides_certificate: boolean;
+  passing_score: number;
+  tags?: string;
+}
+
+export interface Enrollment {
+  course_id: string;
+  course_title: string;
+  enrolled_at: string;
+  completion_status: string;
+  progress_percentage: number;
+  last_accessed?: string;
+  certificate_issued: boolean;
+  certificate_id?: string;
+}
+
+export interface Quiz {
+  id: number;
+  title: string;
+  description?: string;
+  passing_score: number;
+  max_attempts: number;
+  time_limit_minutes?: number;
+  questions_count: number;
+  total_points: number;
+}
+
+export interface Question {
+  id: number;
+  question_text: string;
+  question_type: string;
+  points: number;
+  order: number;
+  answers?: {
+    id: number;
+    answer_text: string;
+    order: number;
+  }[];
+}
+
+export interface QuizAttempt {
+  id: number;
+  quiz_id: number;
+  started_at: string;
+  completed_at?: string;
+  score?: number;
+  passed?: boolean;
+  remaining_attempts: number;
+}
+
+export interface Certificate {
+  certificate_id: string;
+  user_name: string;
+  course_title: string;
+  completion_date: string;
+  issued_date: string;
+  final_score?: number;
+  verification_url: string;
+}
+
+export const lmsApi = {
+  async getCourses(filters?: {
+    audience_type?: string;
+    category?: string;
+    difficulty?: string;
+    search?: string;
+  }): Promise<CourseListItem[]> {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+    }
+    return fetchWithAuth(`/lms/courses?${params}`);
+  },
+
+  async getCourseDetail(courseId: string): Promise<CourseDetail> {
+    return fetchWithAuth(`/lms/courses/${courseId}`);
+  },
+
+  async enrollInCourse(courseId: string): Promise<{ message: string; enrollment_id: number }> {
+    return fetchWithAuth(`/lms/courses/${courseId}/enroll`, {
+      method: 'POST',
+    });
+  },
+
+  async getMyEnrollments(status?: string): Promise<Enrollment[]> {
+    const params = status ? `?status=${status}` : '';
+    return fetchWithAuth(`/lms/enrollments${params}`);
+  },
+
+  async getModuleContent(moduleId: number): Promise<{
+    module: {
+      id: number;
+      title: string;
+      content: string;
+      content_type: string;
+      video_url?: string;
+      duration: number;
+    };
+    progress: {
+      completed: boolean;
+      time_spent: number;
+      quiz_score?: number;
+    };
+    has_quiz: boolean;
+  }> {
+    return fetchWithAuth(`/lms/modules/${moduleId}`);
+  },
+
+  async updateProgress(moduleId: number, completed: boolean, timeSpentSeconds?: number): Promise<{
+    message: string;
+    course_progress: number;
+    course_completed: boolean;
+  }> {
+    return fetchWithAuth('/lms/progress/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        module_id: moduleId,
+        completed,
+        time_spent_seconds: timeSpentSeconds,
+      }),
+    });
+  },
+
+  async getQuiz(moduleId: number): Promise<Quiz> {
+    return fetchWithAuth(`/lms/modules/${moduleId}/quiz`);
+  },
+
+  async getQuizQuestions(quizId: number): Promise<Question[]> {
+    return fetchWithAuth(`/lms/quizzes/${quizId}/questions`);
+  },
+
+  async startQuizAttempt(quizId: number): Promise<QuizAttempt> {
+    return fetchWithAuth(`/lms/quizzes/${quizId}/start`, {
+      method: 'POST',
+    });
+  },
+
+  async submitQuiz(attemptId: number, answers: any[]): Promise<{
+    score: number;
+    passed: boolean;
+    passing_score: number;
+    show_correct_answers: boolean;
+  }> {
+    return fetchWithAuth(`/lms/attempts/${attemptId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+    });
+  },
+
+  async getCertificate(certificateId: string): Promise<Certificate> {
+    return fetchWithAuth(`/lms/certificates/${certificateId}`);
   },
 };

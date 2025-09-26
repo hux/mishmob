@@ -7,6 +7,7 @@ from typing import Optional
 import jwt
 from django.conf import settings
 from datetime import datetime, timedelta
+from api.auth import jwt_auth
 
 User = get_user_model()
 router = Router(tags=["Authentication"])
@@ -46,6 +47,7 @@ class UserResponse(BaseModel):
     is_verified: bool
     profile_picture: Optional[str] = None
     zip_code: Optional[str] = None
+    organization_id: Optional[int] = None
 
 
 def generate_token(user):
@@ -128,14 +130,20 @@ def logout_user(request):
     return {"message": "Successfully logged out"}
 
 
-@router.get("/me", response=UserResponse)
+@router.get("/me", response=UserResponse, auth=jwt_auth)
 def get_current_user(request):
     """Get current user details"""
     
-    if not request.user.is_authenticated:
-        return Response({"error": "Not authenticated"}, status=401)
+    user = request.auth  # The authenticated user from JWT
     
-    user = request.user
+    # Get organization ID if user is a host
+    organization_id = None
+    if user.user_type == 'host':
+        try:
+            organization_id = user.host_profile.id
+        except:
+            pass
+    
     return UserResponse(
         id=str(user.id),
         username=user.username,
@@ -145,5 +153,49 @@ def get_current_user(request):
         user_type=user.user_type,
         is_verified=user.is_verified,
         profile_picture=user.profile_picture.url if user.profile_picture else None,
-        zip_code=user.zip_code
+        zip_code=user.zip_code,
+        organization_id=organization_id
     )
+
+
+class HostProfileRequest(BaseModel):
+    organization_name: str
+    organization_type: Optional[str] = None
+    website: Optional[str] = None
+    description: str
+    address_line1: str
+    city: str
+    state: str
+    zip_code: str
+
+
+@router.post("/host-profile", auth=jwt_auth)
+def create_or_update_host_profile(request, data: HostProfileRequest):
+    """Create or update host organization profile"""
+    
+    user = request.auth
+    
+    if user.user_type != 'host':
+        return Response({"error": "Only host users can create organization profiles"}, status=403)
+    
+    from opportunities.models import OpportunityHost
+    
+    host_profile, created = OpportunityHost.objects.update_or_create(
+        user=user,
+        defaults={
+            'organization_name': data.organization_name,
+            'organization_type': data.organization_type or '',
+            'website': data.website or '',
+            'description': data.description,
+            'address_line1': data.address_line1,
+            'city': data.city,
+            'state': data.state,
+            'zip_code': data.zip_code,
+        }
+    )
+    
+    return {
+        "message": "Host profile created successfully" if created else "Host profile updated successfully",
+        "organization_id": host_profile.id,
+        "organization_name": host_profile.organization_name
+    }

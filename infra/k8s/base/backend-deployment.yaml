@@ -19,14 +19,22 @@ spec:
     spec:
       containers:
       - name: web-backend
-        image: mishmob/backend:latest
-        imagePullPolicy: IfNotPresent
+        image: 787643543720.dkr.ecr.us-east-1.amazonaws.com/mishmob/backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
           name: http
         env:
         - name: DEBUG
           value: "False"
+        - name: ALLOWED_HOSTS
+          value: "*"
+        - name: SECURE_SSL_REDIRECT
+          value: "False"
+        - name: CORS_ALLOWED_ORIGINS
+          value: "https://mishmob.com,https://www.mishmob.com,http://localhost:8080,http://localhost:5173,http://localhost:5175"
+        - name: CSRF_TRUSTED_ORIGINS
+          value: "https://mishmob.com,https://www.mishmob.com"
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:

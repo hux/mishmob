@@ -18,6 +18,27 @@ spec:
   - host: mishmob.example.com
     http:
       paths:
+      - path: /static
+        pathType: Prefix
+        backend:
+          service:
+            name: web-backend
+            port:
+              number: 8000
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: web-backend
+            port:
+              number: 8000
+      - path: /admin
+        pathType: Prefix
+        backend:
+          service:
+            name: web-backend
+            port:
+              number: 8000
       - path: /
         pathType: Prefix
         backend:

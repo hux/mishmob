@@ -4,6 +4,7 @@ export interface OpportunityFilters {
   zip_code?: string;
   skills?: string;
   cause_area?: string;
+  remote_only?: boolean;
   status?: string;
   page?: number;
   page_size?: number;

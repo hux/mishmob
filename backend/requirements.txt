@@ -49,3 +49,6 @@ selenium==4.27.1  # Optional, for JavaScript-heavy sites
 celery==5.4.0
 redis==5.2.1
 django-celery-beat==2.7.0
+
+# Static Files
+whitenoise==6.7.0

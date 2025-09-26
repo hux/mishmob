@@ -19,8 +19,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.http import JsonResponse
 from ninja import NinjaAPI
 from api.urls import setup_api_routes
+
+def health_check(request):
+    """Simple health check endpoint for Kubernetes probes"""
+    return JsonResponse({"status": "healthy"}, status=200)
 
 # Create the main API instance
 api = NinjaAPI(
@@ -33,9 +38,11 @@ api = NinjaAPI(
 setup_api_routes(api)
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='http://localhost:5175/', permanent=False)),
+    path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('api/', api.urls),
+    # Only redirect non-API, non-admin paths to frontend
+    path('', RedirectView.as_view(url='http://localhost:5173/', permanent=False)),
 ]
 
 # Serve media files in development
