@@ -157,7 +157,7 @@ class CertificateSchema(BaseModel):
 
 
 # Course endpoints
-@router.get("/courses", response=List[CourseListSchema], auth=jwt_auth)
+@router.get("/courses", response=List[CourseListSchema])
 def list_courses(
     request,
     audience_type: Optional[str] = None,
@@ -166,7 +166,8 @@ def list_courses(
     search: Optional[str] = None
 ):
     """List all published courses with filters"""
-    user = request.auth
+    # Allow unauthenticated browsing
+    user = getattr(request, 'auth', None)
     
     courses = Course.objects.filter(is_active=True, is_published=True)
     
@@ -187,10 +188,13 @@ def list_courses(
             Q(tags__icontains=search)
         )
     
-    # Get user's enrollments
-    user_enrollments = set(
-        Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
-    )
+    # Get user's enrollments (if authenticated)
+    if user:
+        user_enrollments = set(
+            Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
+        )
+    else:
+        user_enrollments = set()
     
     # Annotate with counts
     courses = courses.annotate(
@@ -202,7 +206,7 @@ def list_courses(
     course_list = []
     for course in courses:
         enrollment = None
-        if str(course.id) in user_enrollments:
+        if user and str(course.id) in user_enrollments:
             try:
                 enrollment = Enrollment.objects.get(user=user, course=course)
             except Enrollment.DoesNotExist:
@@ -228,10 +232,11 @@ def list_courses(
     return course_list
 
 
-@router.get("/courses/{course_id}", response=CourseDetailSchema, auth=jwt_auth)
+@router.get("/courses/{course_id}", response=CourseDetailSchema)
 def get_course_detail(request, course_id: str):
     """Get detailed course information"""
-    user = request.auth
+    # Allow unauthenticated browsing
+    user = getattr(request, 'auth', None)
     
     course = get_object_or_404(
         Course.objects.prefetch_related('modules'),
@@ -239,16 +244,18 @@ def get_course_detail(request, course_id: str):
         is_active=True
     )
     
-    # Check enrollment
-    try:
-        enrollment = Enrollment.objects.get(user=user, course=course)
-        module_progress = {
-            mp.module_id: mp.completed
-            for mp in enrollment.module_progress.all()
-        }
-    except Enrollment.DoesNotExist:
-        enrollment = None
-        module_progress = {}
+    # Check enrollment (if authenticated)
+    enrollment = None
+    module_progress = {}
+    if user:
+        try:
+            enrollment = Enrollment.objects.get(user=user, course=course)
+            module_progress = {
+                mp.module_id: mp.completed
+                for mp in enrollment.module_progress.all()
+            }
+        except Enrollment.DoesNotExist:
+            pass
     
     # Build modules list
     modules = []

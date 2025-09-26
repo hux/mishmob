@@ -15,8 +15,8 @@ dev: ## Start ALL local development services (DB, Backend, Frontend, Redis, Meil
 	@echo "Starting all local development services..."
 	@echo "This will start:"
 	@echo "  - PostgreSQL on port 5433"
-	@echo "  - Backend API on http://localhost:8001"
-	@echo "  - Frontend on http://localhost:8080"
+	@echo "  - Backend API on http://localhost:8080"
+	@echo "  - Frontend on http://localhost:8081"
 	@echo "  - Meilisearch on http://localhost:7701"
 	@echo "  - Redis on port 6380"
 	@echo ""
@@ -25,7 +25,7 @@ dev: ## Start ALL local development services (DB, Backend, Frontend, Redis, Meil
 	@echo "Services starting up... Check status with 'make dev-status'"
 	@echo "View logs with 'make dev-logs'"
 	@echo ""
-	@echo "Once ready, access the app at http://localhost:8080"
+	@echo "Once ready, access the app at http://localhost:8081"
 
 dev-status: ## Show status of development services
 	@docker-compose ps

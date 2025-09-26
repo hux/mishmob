@@ -1,5 +1,5 @@
 // API configuration and base client
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Type definitions
 export interface User {
@@ -168,6 +168,8 @@ export const tokenManager = {
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = tokenManager.getToken();
   
+  console.log('fetchWithAuth called:', { url, hasToken: !!token });
+  
   const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -192,7 +194,9 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     throw new ApiError(response.status, errorMessage);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('fetchWithAuth returning:', { url, data });
+  return data;
 }
 
 // Auth API

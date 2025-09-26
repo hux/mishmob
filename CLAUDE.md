@@ -1,5 +1,10 @@
 # MishMob - AI Assistant Context Guide
 
+## IMPORTANT: Port Configuration
+- **Backend API**: http://localhost:8080 (NOT 8000 - another project uses that port)
+- **Frontend Dev Server**: http://localhost:8081 (Vite auto-selects available port)
+- Always run Django backend on port 8080: `python manage.py runserver 8080`
+
 ## Vision Statement
 MishMob (Mission Mobilization) envisions a world where purpose, meaning, and belonging are accessible to everyone through action. By enabling individuals to quickly and effectively mobilize around local missions, MishMob unlocks human potential for both individual purpose and community service. Our platform identifies unique skillsets, connects people with compelling opportunities, and inspires them to serve. Through thoughtful, intentional micro-missions, we address community needs, foster connection, and build stronger, more resilient communities—one mission at a time.
 

@@ -45,6 +45,8 @@ export function Messages() {
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
 
   // Fetch conversations
   const { data: conversationsData, isLoading: isLoadingConversations } = useQuery({
@@ -150,6 +152,14 @@ export function Messages() {
   const getConversationInitials = (conversation: Conversation) => {
     const title = getConversationTitle(conversation);
     return title.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const openConversationDetails = () => {
+    const conversation = conversationsData?.conversations.find(c => c.id === selectedConversationId);
+    if (conversation) {
+      setSelectedConversation(conversation);
+      setIsDetailsOpen(true);
+    }
   };
 
   return (
@@ -308,6 +318,9 @@ export function Messages() {
                               </div>
                             </div>
                             <div className="flex gap-2">
+                              <Button size="icon" variant="ghost" onClick={openConversationDetails} title="View conversation details">
+                                <AlertCircle className="h-4 w-4" />
+                              </Button>
                               <Button size="icon" variant="ghost">
                                 <Star className="h-4 w-4" />
                               </Button>
@@ -428,6 +441,124 @@ export function Messages() {
             </div>
           </div>
         </Card>
+
+        {/* Conversation Details Modal */}
+        <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+          <DialogContent className="max-w-2xl">
+            {selectedConversation && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Conversation Details</DialogTitle>
+                  <DialogDescription>
+                    Information about this conversation
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 mt-4">
+                  {/* Conversation Title & Info */}
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={getConversationAvatar(selectedConversation) || undefined} />
+                      <AvatarFallback>
+                        {getConversationInitials(selectedConversation)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{getConversationTitle(selectedConversation)}</h3>
+                      {selectedConversation.subject && (
+                        <p className="text-muted-foreground">Subject: {selectedConversation.subject}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedConversation.is_group ? 'Group Conversation' : 'Direct Message'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Participants */}
+                  <div>
+                    <h4 className="font-semibold mb-3">Participants ({selectedConversation.participants.length})</h4>
+                    <div className="space-y-2">
+                      {selectedConversation.participants.map((participant) => (
+                        <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={participant.profile_picture} />
+                            <AvatarFallback>
+                              {`${participant.first_name[0]}${participant.last_name[0]}`.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-medium">
+                              {`${participant.first_name} ${participant.last_name}`.trim() || participant.username}
+                              {participant.id === user?.id && ' (You)'}
+                            </p>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {participant.user_type.replace('_', ' ')}
+                            </p>
+                          </div>
+                          {participant.is_online && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Related Opportunity (if applicable) */}
+                  {selectedConversation.related_opportunity && (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <h4 className="font-semibold mb-2">Related Opportunity</h4>
+                      <p className="text-sm">{selectedConversation.related_opportunity.title}</p>
+                      <a
+                        href={`/opportunities/${selectedConversation.related_opportunity.id}`}
+                        className="text-sm text-primary hover:underline mt-1 inline-block"
+                      >
+                        View opportunity →
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Conversation Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <p className="text-sm text-muted-foreground">Created</p>
+                      <p className="font-medium">
+                        {format(new Date(selectedConversation.created_at), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <p className="text-sm text-muted-foreground">Last Activity</p>
+                      <p className="font-medium">
+                        {selectedConversation.last_message 
+                          ? formatMessageTime(selectedConversation.last_message.created_at)
+                          : 'No messages yet'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
+                      Close
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        // Implement archive/leave conversation
+                        toast({
+                          title: 'Feature coming soon',
+                          description: 'Archive functionality will be available soon.',
+                        });
+                      }}
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive Conversation
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

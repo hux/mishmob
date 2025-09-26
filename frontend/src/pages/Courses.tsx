@@ -28,15 +28,28 @@ export function Courses() {
   const [difficultyFilter, setDifficultyFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
 
-  const { data: courses, isLoading } = useQuery({
+  const { data: courses, isLoading, error } = useQuery({
     queryKey: ['courses', searchQuery, audienceFilter, difficultyFilter, categoryFilter],
-    queryFn: () => lmsApi.getCourses({
-      search: searchQuery || undefined,
-      audience_type: audienceFilter || undefined,
-      difficulty: difficultyFilter || undefined,
-      category: categoryFilter || undefined,
-    }),
+    queryFn: async () => {
+      console.log('Fetching courses...');
+      try {
+        const result = await lmsApi.getCourses({
+          search: searchQuery || undefined,
+          audience_type: audienceFilter || undefined,
+          difficulty: difficultyFilter || undefined,
+          category: categoryFilter || undefined,
+        });
+        console.log('Courses received:', result);
+        return result;
+      } catch (err) {
+        console.error('Error in queryFn:', err);
+        throw err;
+      }
+    },
   });
+
+  // Debug logging
+  console.log('Courses component state:', { courses, isLoading, error });
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
@@ -130,6 +143,9 @@ export function Courses() {
     </Card>
   );
 
+  // Ensure component is rendering
+  console.log('Courses component rendering...');
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -137,7 +153,16 @@ export function Courses() {
         <p className="text-xl text-muted-foreground">
           Develop your skills and prepare for meaningful volunteer opportunities
         </p>
+        <p className="text-sm text-gray-500 mt-2">Debug: Component rendered. Courses: {courses ? courses.length : 'loading...'}</p>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg">
+          <p>Failed to load courses. Please try again later.</p>
+          <p className="text-sm mt-1">Error: {error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -208,23 +233,23 @@ export function Courses() {
                 />
               </div>
             </div>
-            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+            <Select value={audienceFilter || 'all'} onValueChange={(value) => setAudienceFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="All Audiences" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Audiences</SelectItem>
+                <SelectItem value="all">All Audiences</SelectItem>
                 <SelectItem value="volunteer">For Volunteers</SelectItem>
                 <SelectItem value="host">For Hosts</SelectItem>
                 <SelectItem value="both">For Everyone</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+            <Select value={difficultyFilter || 'all'} onValueChange={(value) => setDifficultyFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="All Levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 <SelectItem value="beginner">Beginner</SelectItem>
                 <SelectItem value="intermediate">Intermediate</SelectItem>
                 <SelectItem value="advanced">Advanced</SelectItem>
@@ -261,7 +286,7 @@ export function Courses() {
             <CourseCard key={course.id} course={course} />
           ))}
         </div>
-      ) : (
+      ) : !isLoading ? (
         <Card>
           <CardContent className="text-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -271,7 +296,7 @@ export function Courses() {
             </p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
