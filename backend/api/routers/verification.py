@@ -8,6 +8,7 @@ from ninja.files import UploadedFile
 from pydantic import BaseModel
 from PIL import Image
 import logging
+from botocore.exceptions import ClientError
 
 from users.models import User
 from api.auth import jwt_auth  # Use the existing JWT auth
@@ -40,29 +41,60 @@ def compare_faces(id_image_bytes: bytes, selfie_image_bytes: bytes) -> tuple[flo
         # Initialize AWS Rekognition client
         rekognition = boto3.client(
             'rekognition',
-            region_name=getattr(settings, 'AWS_REGION', 'us-east-1'),
+            region_name=settings.AWS_REGION,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
         )
         
-        # Compare faces
+        # Compare faces with lower threshold to get all matches
         response = rekognition.compare_faces(
             SourceImage={'Bytes': id_image_bytes},
             TargetImage={'Bytes': selfie_image_bytes},
-            SimilarityThreshold=99.0  # 99% threshold as required
+            SimilarityThreshold=80.0  # Lower threshold to catch more matches
         )
         
         if response['FaceMatches']:
             # Get the highest similarity score
             similarity = response['FaceMatches'][0]['Similarity'] / 100.0
+            logger.info(f"Face comparison result: {similarity:.1%} similarity")
             return similarity, similarity >= 0.99
         else:
-            # No matches found above threshold
+            # Check if faces were detected
+            if not response.get('SourceImageFace'):
+                logger.warning("No face detected in ID photo")
+                raise ValueError("No face detected in ID photo. Please ensure the ID photo clearly shows a face.")
+            
+            if len(response.get('UnmatchedFaces', [])) == 0:
+                logger.warning("No face detected in selfie")
+                raise ValueError("No face detected in selfie. Please ensure your face is clearly visible.")
+            
+            # Faces detected but don't match
+            logger.info("Faces detected but similarity below 80%")
             return 0.0, False
             
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        error_message = e.response['Error']['Message']
+        
+        if error_code == 'InvalidParameterException':
+            if 'size' in error_message.lower():
+                raise ValueError("Image file too large. Please use images under 5MB.")
+            elif 'format' in error_message.lower():
+                raise ValueError("Invalid image format. Please use JPEG or PNG images.")
+        elif error_code == 'AccessDeniedException':
+            logger.error("AWS Rekognition access denied")
+            raise ValueError("Service temporarily unavailable. Please try again later.")
+        elif error_code == 'InvalidImageFormatException':
+            raise ValueError("Invalid image format. Please use JPEG or PNG images.")
+        else:
+            logger.error(f"AWS Rekognition error: {error_code} - {error_message}")
+            raise ValueError("An error occurred during verification. Please try again.")
+            
     except Exception as e:
-        logger.error(f"AWS Rekognition error: {str(e)}")
-        raise
+        logger.error(f"Unexpected error in face comparison: {str(e)}")
+        if isinstance(e, ValueError):
+            raise
+        raise ValueError("An unexpected error occurred. Please try again.")
 
 
 def process_image(uploaded_file: UploadedFile, max_size: int = 5242880) -> bytes:

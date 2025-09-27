@@ -18,7 +18,7 @@ type CaptureType = 'id' | 'selfie';
 
 interface VerificationResult {
   similarity: number;
-  isVerified: boolean;
+  is_verified: boolean;
   message: string;
 }
 
@@ -32,6 +32,7 @@ export default function IdVerificationScreen({ navigation }: any) {
   const [permission, requestPermission] = useCameraPermissions();
   const [camera, setCamera] = useState<any>(null);
   const [captureType, setCaptureType] = useState<CaptureType>('id');
+  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
 
   const handleStartVerification = async () => {
     if (!permission?.granted) {
@@ -43,6 +44,7 @@ export default function IdVerificationScreen({ navigation }: any) {
     }
     setStep('captureId');
     setCaptureType('id');
+    setCameraFacing('back'); // Back camera for ID photo
   };
 
   const handleCapture = async () => {
@@ -53,6 +55,7 @@ export default function IdVerificationScreen({ navigation }: any) {
         setIdImage(photo.uri);
         setStep('captureSelfie');
         setCaptureType('selfie');
+        setCameraFacing('front'); // Switch to front camera for selfie
       } else {
         setSelfieImage(photo.uri);
         setSelfieAttempts(selfieAttempts + 1);
@@ -81,6 +84,7 @@ export default function IdVerificationScreen({ navigation }: any) {
     if (selfieAttempts < 3) {
       setStep('captureSelfie');
       setSelfieImage(null);
+      setCameraFacing('front'); // Ensure front camera for selfie retry
     } else {
       Alert.alert(
         'Verification Failed',
@@ -120,11 +124,15 @@ export default function IdVerificationScreen({ navigation }: any) {
     </ScrollView>
   );
 
+  const toggleCameraFacing = () => {
+    setCameraFacing(current => current === 'back' ? 'front' : 'back');
+  };
+
   const renderCamera = () => (
     <View style={styles.cameraContainer}>
       <CameraView
         style={styles.camera}
-        facing="back"
+        facing={cameraFacing}
         ref={(ref) => setCamera(ref)}
       >
         <View style={styles.cameraOverlay}>
@@ -136,14 +144,24 @@ export default function IdVerificationScreen({ navigation }: any) {
           <View style={styles.frameGuide} />
         </View>
       </CameraView>
-      <Button 
-        mode="contained" 
-        onPress={handleCapture} 
-        style={styles.captureButton}
-        icon="camera"
-      >
-        Capture {captureType === 'id' ? 'ID' : 'Selfie'}
-      </Button>
+      <View style={styles.cameraControls}>
+        <Button 
+          mode="outlined" 
+          onPress={toggleCameraFacing} 
+          style={styles.flipButton}
+          icon="camera-flip"
+        >
+          Flip
+        </Button>
+        <Button 
+          mode="contained" 
+          onPress={handleCapture} 
+          style={styles.captureButton}
+          icon="camera"
+        >
+          Capture {captureType === 'id' ? 'ID' : 'Selfie'}
+        </Button>
+      </View>
     </View>
   );
 
@@ -159,26 +177,26 @@ export default function IdVerificationScreen({ navigation }: any) {
     <ScrollView style={styles.container}>
       <Card style={styles.card}>
         <Card.Content>
-          <Title>{verificationResult?.isVerified ? 'Verification Successful!' : 'Verification Failed'}</Title>
+          <Title>{verificationResult?.is_verified ? 'Verification Successful!' : 'Verification Failed'}</Title>
           <Paragraph style={styles.resultText}>
             {verificationResult?.message}
           </Paragraph>
-          {verificationResult?.isVerified && (
+          {verificationResult?.is_verified && (
             <View style={styles.successContainer}>
               <Text style={styles.similarityText}>
                 Match Confidence: {(verificationResult.similarity * 100).toFixed(1)}%
               </Text>
             </View>
           )}
-          {!verificationResult?.isVerified && selfieAttempts < 3 && (
+          {!verificationResult?.is_verified && selfieAttempts < 3 && (
             <Paragraph style={styles.retryText}>
               You have {3 - selfieAttempts} attempts remaining.
             </Paragraph>
           )}
         </Card.Content>
         <Card.Actions>
-          {verificationResult?.isVerified ? (
-            <Button mode="contained" onPress={() => navigation.navigate('Profile')}>
+          {verificationResult?.is_verified ? (
+            <Button mode="contained" onPress={() => navigation.goBack()}>
               Continue to Profile
             </Button>
           ) : selfieAttempts < 3 ? (
@@ -277,10 +295,22 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderRadius: 12,
   },
-  captureButton: {
+  cameraControls: {
     position: 'absolute',
     bottom: 32,
-    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 32,
+  },
+  captureButton: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  flipButton: {
+    flex: 0.5,
+    marginRight: 8,
   },
   processingContainer: {
     flex: 1,
