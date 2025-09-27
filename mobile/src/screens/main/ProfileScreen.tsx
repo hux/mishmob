@@ -104,6 +104,14 @@ export default function ProfileScreen({ navigation }: any) {
         <Card style={styles.actionsCard}>
           <Card.Content>
             <Button 
+              mode="contained" 
+              onPress={() => navigation.navigate('MyTickets' as any)}
+              icon="ticket"
+              style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
+            >
+              My Event Tickets
+            </Button>
+            <Button 
               mode="outlined" 
               onPress={() => {}}
               icon="cog"

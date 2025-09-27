@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'lms',
     'api',
     'messaging',
+    'events',
 ]
 
 MIDDLEWARE = [
@@ -180,11 +181,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
+# Allow all origins in development (for React Native)
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_HEADERS = [
+        'accept',
+        'accept-encoding',
+        'authorization',
+        'content-type',
+        'dnt',
+        'origin',
+        'user-agent',
+        'x-csrftoken',
+        'x-requested-with',
+    ]
+
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://mishmob.com,https://www.mishmob.com', cast=Csv())
 
 # Custom User Model
-AUTH_USER_MODEL = 'users.User'
+# AUTH_USER_MODEL = 'users.User'  # TODO: This needs to be set before initial migration
 
 # Email Settings
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

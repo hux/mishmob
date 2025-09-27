@@ -22,7 +22,7 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'auth_user'
+        # db_table = 'auth_user'  # Don't use the same table as default User
         indexes = [
             models.Index(fields=['user_type']),
             models.Index(fields=['zip_code']),

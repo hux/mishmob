@@ -16,6 +16,7 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 import ScanScreen from '../screens/main/ScanScreen';
 import IdVerificationScreen from '../screens/main/IdVerificationScreen';
 import TestScreen from '../screens/main/TestScreen';
+import MyTicketsScreen from '../screens/main/MyTicketsScreen';
 
 const AuthStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -81,6 +82,14 @@ function MainNavigator() {
         component={IdVerificationScreen}
         options={{ 
           title: 'Verify Identity',
+          headerBackTitle: 'Back'
+        }}
+      />
+      <MainStack.Screen
+        name="MyTickets"
+        component={MyTicketsScreen}
+        options={{ 
+          title: 'My Tickets',
           headerBackTitle: 'Back'
         }}
       />

@@ -31,7 +31,8 @@ def health_check(request):
 api = NinjaAPI(
     title="MishMob API",
     version="1.0.0",
-    description="API for MishMob volunteer matching platform"
+    description="API for MishMob volunteer matching platform",
+    csrf=False  # Disable CSRF for API endpoints (we use JWT auth)
 )
 
 # Setup API routes

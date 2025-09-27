@@ -18,9 +18,14 @@ export default function LoginScreen() {
     setLoading(true);
     
     try {
+      console.log('Attempting login with username:', username);
       await login(username, password);
+      console.log('Login successful!');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      console.error('Login error:', err);
+      console.error('Error stack:', err.stack);
+      const errorMessage = err.message || 'Invalid credentials';
+      setError(`Login failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

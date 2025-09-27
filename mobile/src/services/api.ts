@@ -14,21 +14,18 @@ const getApiUrl = () => {
   // You can find this with: ifconfig | grep "inet " | grep -v 127.0.0.1
   const HOST_IP = '192.168.1.170'; // Update this to your computer's IP
   
-  // For now, just use the host IP since it works
-  return `http://${HOST_IP}:8080/api`;
-  
-  // TODO: Fix these later
   // Android emulator needs special IP to access host machine
-  // if (Platform.OS === 'android' && !Constants.isDevice) {
-  //   return 'http://10.0.2.2:8080/api';
-  // }
+  if (Platform.OS === 'android' && !Constants.isDevice) {
+    return 'http://10.0.2.2:8090/api';
+  }
+  
+  // iOS simulator can use localhost
+  if (Platform.OS === 'ios' && !Constants.isDevice) {
+    return 'http://localhost:8090/api';
+  }
   
   // Physical device needs actual IP
-  // if (Constants.isDevice) {
-  //   return `http://${HOST_IP}:8080/api`;
-  // }
-  
-  // return 'http://localhost:8080/api';
+  return `http://${HOST_IP}:8090/api`;
 };
 
 const API_BASE_URL = getApiUrl();
@@ -66,23 +63,37 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+  const fullUrl = `${API_BASE_URL}${url}`;
+  console.log('Making request to:', fullUrl);
+  console.log('Request method:', options.method || 'GET');
+  console.log('Request body:', options.body);
+
   try {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
+    const response = await fetch(fullUrl, {
       ...options,
       headers,
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || `HTTP ${response.status}`);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error(errorText || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('Response data:', data);
+    return data;
   } catch (error: any) {
     clearTimeout(timeoutId);
+    console.error('Request failed:', error);
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    
     if (error.name === 'AbortError') {
       throw new Error('Request timeout - check if backend is running on port 8080');
     }
@@ -93,13 +104,23 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 // Auth API
 export const authApi = {
   async login(username: string, password: string) {
-    const response = await fetchWithAuth('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-    
-    await tokenManager.setToken(response.access_token);
-    return response;
+    console.log('Attempting login to:', `${API_BASE_URL}/auth/login`);
+    try {
+      const response = await fetchWithAuth('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      
+      if (!response.access_token) {
+        throw new Error('No access token received');
+      }
+      
+      await tokenManager.setToken(response.access_token);
+      return response;
+    } catch (error: any) {
+      console.error('Login failed:', error.message);
+      throw error;
+    }
   },
 
   async register(data: any) {
@@ -132,6 +153,13 @@ export const opportunitiesApi = {
 
   async getById(id: string) {
     return fetchWithAuth(`/opportunities/${id}`);
+  },
+};
+
+// Tickets API
+export const ticketsApi = {
+  async getQRCode(qrData: string) {
+    return fetchWithAuth(`/tickets/qr/${encodeURIComponent(qrData)}`);
   },
 };
 

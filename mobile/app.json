@@ -25,7 +25,10 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.mishmob.app",
-      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION"]
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +36,8 @@
     "plugins": [
       "expo-camera",
       "expo-location",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-barcode-scanner"
     ]
   }
 }
