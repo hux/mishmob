@@ -2,20 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mishmob-ingress
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-cluster-issuer
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   tls:
   - hosts:
-    - mishmob.example.com
-    - api.mishmob.example.com
+    - mishmob.com
+    - www.mishmob.com
     secretName: mishmob-tls
   rules:
-  - host: mishmob.example.com
+  - host: mishmob.com
     http:
       paths:
       - path: /static
@@ -46,13 +40,34 @@ spec:
             name: web-ui
             port:
               number: 80
-  - host: api.mishmob.example.com
+  - host: www.mishmob.com
     http:
       paths:
-      - path: /
+      - path: /static
         pathType: Prefix
         backend:
           service:
             name: web-backend
             port:
               number: 8000
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: web-backend
+            port:
+              number: 8000
+      - path: /admin
+        pathType: Prefix
+        backend:
+          service:
+            name: web-backend
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-ui
+            port:
+              number: 80

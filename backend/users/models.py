@@ -55,6 +55,10 @@ class UserProfile(models.Model):
     background_check_status = models.CharField(max_length=20, choices=BACKGROUND_CHECK_STATUS, default='pending')
     background_check_date = models.DateField(null=True, blank=True)
     
+    # Identity verification
+    is_verified = models.BooleanField(default=False, help_text="Whether the user's identity has been verified via ID check")
+    verified_at = models.DateTimeField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

@@ -85,7 +85,7 @@ cat > infra/k8s/overlays/prod/kustomization.yaml <<EOF
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-bases:
+resources:
   - ../../base
 
 images:
@@ -124,6 +124,11 @@ EOF
 # Deploy with kustomize
 log_info "Applying Kubernetes manifests..."
 kubectl apply -k infra/k8s/overlays/prod/
+
+# Force rollout restart to ensure latest images are pulled
+log_info "Restarting deployments to pull latest images..."
+kubectl rollout restart deployment/web-backend -n $NAMESPACE
+kubectl rollout restart deployment/web-ui -n $NAMESPACE
 
 # Wait for deployments
 log_info "Waiting for deployments to be ready..."

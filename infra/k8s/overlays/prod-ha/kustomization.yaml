@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-bases:
+resources:
   - ../../base
 
 images:
@@ -20,24 +20,7 @@ replicas:
   - name: redis
     count: 2
 
-patches:
-  - target:
-      kind: Ingress
-      name: mishmob-ingress
-    patch: |-
-      - op: replace
-        path: /spec/tls/0/hosts/0
-        value: mishmob.com
-      - op: replace
-        path: /spec/tls/0/hosts/1
-        value: api.mishmob.com
-      - op: replace
-        path: /spec/rules/0/host
-        value: mishmob.com
-      - op: replace
-        path: /spec/rules/1/host
-        value: api.mishmob.com
-
 patchesStrategicMerge:
+  - ingress-patch.yaml
   - postgres-ha.yaml
   - redis-ha.yaml

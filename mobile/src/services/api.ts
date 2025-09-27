@@ -1,11 +1,41 @@
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // Get API URL from environment or use default
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:8000/api';
+// For Android emulator, localhost refers to the emulator itself, not the host machine
+// Use 10.0.2.2 for Android emulator to access host machine's localhost
+const getApiUrl = () => {
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+  
+  // For physical devices and simulators, use your computer's IP
+  // You can find this with: ifconfig | grep "inet " | grep -v 127.0.0.1
+  const HOST_IP = '192.168.1.170'; // Update this to your computer's IP
+  
+  // For now, just use the host IP since it works
+  return `http://${HOST_IP}:8080/api`;
+  
+  // TODO: Fix these later
+  // Android emulator needs special IP to access host machine
+  // if (Platform.OS === 'android' && !Constants.isDevice) {
+  //   return 'http://10.0.2.2:8080/api';
+  // }
+  
+  // Physical device needs actual IP
+  // if (Constants.isDevice) {
+  //   return `http://${HOST_IP}:8080/api`;
+  // }
+  
+  // return 'http://localhost:8080/api';
+};
+
+const API_BASE_URL = getApiUrl();
+console.log('API_BASE_URL:', API_BASE_URL);
 
 // Re-export types from shared
-export * from '../../../shared/api-types';
+export * from 'api-types';
 
 // Token management using SecureStore
 export const tokenManager = {
@@ -22,7 +52,7 @@ export const tokenManager = {
   },
 };
 
-// Base fetch function
+// Base fetch function with timeout
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = await tokenManager.getToken();
   
@@ -32,17 +62,32 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers,
-  });
+  // Add timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `HTTP ${response.status}`);
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - check if backend is running on port 8080');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 // Auth API
@@ -87,5 +132,42 @@ export const opportunitiesApi = {
 
   async getById(id: string) {
     return fetchWithAuth(`/opportunities/${id}`);
+  },
+};
+
+// User Verification API
+export const verificationApi = {
+  async verifyIdentity(idImageUri: string, selfieImageUri: string) {
+    const formData = new FormData();
+    formData.append('id_image', {
+      uri: idImageUri,
+      type: 'image/jpeg',
+      name: 'id.jpg',
+    } as any);
+    formData.append('selfie_image', {
+      uri: selfieImageUri,
+      type: 'image/jpeg',
+      name: 'selfie.jpg',
+    } as any);
+
+    const token = await tokenManager.getToken();
+    const response = await fetch(`${API_BASE_URL}/users/verify-identity`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async getVerificationStatus() {
+    return fetchWithAuth('/users/verification-status');
   },
 };

@@ -58,6 +58,76 @@ dev-populate: ## Populate sample data
 dev-createsuperuser: ## Create Django superuser
 	docker-compose exec backend python manage.py createsuperuser
 
+# Mobile development
+mobile-ios: ## Start iOS app in Expo
+	@echo "Starting iOS app with Expo..."
+	@cd mobile && npx expo start --ios --port 8082
+
+mobile-android: ## Start Android app in Expo  
+	@echo "Starting Android app with Expo..."
+	@cd mobile && npx expo start --android --port 8082
+
+mobile: ## Start Expo development server (use QR code for device)
+	@echo "Starting Expo development server..."
+	@echo "Scan the QR code with Expo Go app on your device"
+	@cd mobile && npx expo start --port 8082
+
+mobile-web: ## Start mobile app in web browser
+	@echo "Starting mobile app in web browser..."
+	@cd mobile && npx expo start --web --port 8082
+
+mobile-install: ## Install mobile app dependencies
+	@echo "Installing mobile app dependencies..."
+	@cd mobile && npm install
+
+mobile-clean: ## Clean mobile app build cache and dependencies
+	@echo "Cleaning mobile app cache and dependencies..."
+	@cd mobile && rm -rf node_modules package-lock.json .expo
+	@echo "Run 'make mobile-install' to reinstall dependencies"
+
+mobile-clear-cache: ## Clear Metro bundler cache
+	@echo "Clearing Metro bundler cache..."
+	@cd mobile && npx expo start --clear
+	@cd mobile && rm -rf .expo
+	@cd mobile && watchman watch-del-all 2>/dev/null || true
+
+mobile-setup: ## Complete mobile setup (clean install)
+	@echo "Setting up mobile development environment..."
+	@cd mobile && rm -rf node_modules package-lock.json .expo
+	@cd mobile && npm install
+	@echo "Mobile setup complete! You can now run 'make mobile-ios' or 'make mobile-android'"
+
+mobile-fix-ios: ## Fix iOS simulator issues
+	@echo "Fixing iOS simulator issues..."
+	@echo "1. Opening Xcode to download simulators..."
+	@open -a Xcode
+	@echo "2. Please go to Xcode > Settings > Platforms and download iOS simulators"
+	@echo "3. Alternatively, listing available simulators:"
+	@xcrun simctl list devices
+	@echo ""
+	@echo "If no simulators are available, install them via Xcode"
+
+mobile-ios-device: ## List available iOS simulators and let user choose
+	@echo "Available iOS simulators:"
+	@xcrun simctl list devices available | grep -E "iPhone|iPad"
+	@echo ""
+	@echo "To use a specific device, run:"
+	@echo "cd mobile && npx expo start --ios --simulator='iPhone 15'"
+
+mobile-test: ## Test mobile development setup
+	@./scripts/test-mobile-setup.sh
+
+mobile-fix-ios-simulator: ## Fix iOS simulator issues
+	@./scripts/fix-ios-simulator.sh
+
+mobile-browser: ## Open Expo in browser (quick test without simulators)
+	@echo "Starting Expo and opening in browser..."
+	@echo "This opens the Expo DevTools in your browser"
+	@cd mobile && expo start --web --host localhost --port 8082
+
+mobile-fix-upgrade: ## Fix issues after Expo SDK upgrade
+	@./scripts/fix-expo-upgrade.sh
+
 # Prevent make from treating service names as targets
 %:
 	@:
