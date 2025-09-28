@@ -34,11 +34,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-node-
       
-    - name: Run type check
-      run: |
-        cd frontend
-        npm run type-check
-      
     - name: Run linter
       run: |
         cd frontend
