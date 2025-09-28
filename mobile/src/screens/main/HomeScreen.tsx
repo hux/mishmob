@@ -5,14 +5,21 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { opportunitiesApi } from '../../services/api';
 import OpportunityCard from '../../components/OpportunityCard';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { LoadingScreen, SkeletonLoader } from '../../components/LoadingScreen';
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { handleError } = useErrorHandler();
   
-  const { data: featured, isLoading } = useQuery({
+  const { data: featured, isLoading, error } = useQuery({
     queryKey: ['featured-opportunities'],
     queryFn: opportunitiesApi.getFeatured,
+    onError: (err) => handleError(err, 'Featured opportunities'),
   });
+
+  console.log('Featured opportunities:', featured);
+  console.log('Is loading:', isLoading);
 
   return (
     <ScrollView style={styles.container}>
@@ -29,19 +36,31 @@ export default function HomeScreen() {
         <Title style={styles.sectionTitle}>Featured Opportunities</Title>
         
         {isLoading ? (
-          <Card style={styles.loadingCard}>
+          <SkeletonLoader lines={3} />
+        ) : error ? (
+          <Card style={styles.errorCard}>
             <Card.Content>
-              <Text>Loading opportunities...</Text>
+              <Text style={styles.errorText}>
+                Unable to load featured opportunities
+              </Text>
             </Card.Content>
           </Card>
-        ) : (
-          featured?.map((opportunity: any) => (
+        ) : featured && featured.length > 0 ? (
+          featured.map((opportunity: any) => (
             <OpportunityCard
               key={opportunity.id}
               opportunity={opportunity}
               style={styles.opportunityCard}
             />
           ))
+        ) : (
+          <Card style={styles.emptyCard}>
+            <Card.Content>
+              <Text style={styles.emptyText}>
+                No featured opportunities available at the moment
+              </Text>
+            </Card.Content>
+          </Card>
         )}
       </View>
 
@@ -106,5 +125,22 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 8,
+  },
+  errorCard: {
+    marginBottom: 16,
+    backgroundColor: '#FEE2E2',
+  },
+  errorText: {
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+  emptyCard: {
+    marginBottom: 16,
+    backgroundColor: 'white',
+  },
+  emptyText: {
+    color: '#6B7280',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

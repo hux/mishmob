@@ -59,42 +59,61 @@ dev-createsuperuser: ## Create Django superuser
 	docker-compose exec backend python manage.py createsuperuser
 
 # Mobile development
-mobile-ios: ## Start iOS app in Expo
-	@echo "Starting iOS app with Expo..."
-	@cd mobile && npx expo start --ios --port 8082
+mobile-ios: ## Start iOS app with React Native CLI and Metro
+	@echo "Starting iOS app with React Native CLI and Metro..."
+	@echo "Starting Metro bundler on port 8083..."
+	@cd mobile && npm start -- --port=8083 &
+	@echo "Waiting for Metro to start..."
+	@sleep 5
+	@echo "Launching iOS simulator..."
+	@cd mobile && npm run ios -- --port=8083 || (echo "❌ iOS simulator failed. Try 'make mobile-fix-ios' to install simulators" && exit 1)
 
-mobile-android: ## Start Android app in Expo  
-	@echo "Starting Android app with Expo..."
-	@cd mobile && npx expo start --android --port 8082
+mobile-android: ## Start Android app with React Native CLI and Metro
+	@echo "Starting Android app with React Native CLI and Metro..."
+	@echo "Starting Metro bundler on port 8082..."
+	@cd mobile && npm start -- --port=8082 &
+	@echo "Waiting for Metro to start..."
+	@sleep 3
+	@echo "Launching Android emulator..."
+	@cd mobile && npm run android
 
-mobile: ## Start Expo development server (use QR code for device)
-	@echo "Starting Expo development server..."
-	@echo "Scan the QR code with Expo Go app on your device"
-	@cd mobile && npx expo start --port 8082
+mobile: ## Start Metro development server only
+	@echo "Starting Metro development server..."
+	@echo "Use 'make mobile-ios' or 'make mobile-android' to launch simulators"
+	@cd mobile && npm start -- --port=8082
 
-mobile-web: ## Start mobile app in web browser
+mobile-web: ## Start mobile app in web browser (if supported)
 	@echo "Starting mobile app in web browser..."
-	@cd mobile && npx expo start --web --port 8082
+	@cd mobile && npm run web || echo "Web support not available in React Native CLI"
 
 mobile-install: ## Install mobile app dependencies
 	@echo "Installing mobile app dependencies..."
 	@cd mobile && npm install
+	@echo "Installing iOS pods (if on macOS)..."
+	@cd mobile/ios 2>/dev/null && pod install || echo "iOS pods not available or not on macOS"
 
 mobile-clean: ## Clean mobile app build cache and dependencies
 	@echo "Cleaning mobile app cache and dependencies..."
 	@cd mobile && rm -rf node_modules package-lock.json .expo
+	@cd mobile && rm -rf android/build ios/build || true
+	@echo "Clearing Metro cache..."
+	@cd mobile && npx react-native start --reset-cache || npm start -- --reset-cache || true
 	@echo "Run 'make mobile-install' to reinstall dependencies"
 
 mobile-clear-cache: ## Clear Metro bundler cache
 	@echo "Clearing Metro bundler cache..."
-	@cd mobile && npx expo start --clear
+	@cd mobile && npx react-native start --reset-cache || npm start -- --reset-cache
 	@cd mobile && rm -rf .expo
 	@cd mobile && watchman watch-del-all 2>/dev/null || true
+	@echo "Clearing temporary Metro cache files..."
+	@cd mobile && rm -rf /tmp/metro-* 2>/dev/null || true
 
 mobile-setup: ## Complete mobile setup (clean install)
 	@echo "Setting up mobile development environment..."
 	@cd mobile && rm -rf node_modules package-lock.json .expo
 	@cd mobile && npm install
+	@echo "Installing iOS pods (if on macOS)..."
+	@cd mobile/ios 2>/dev/null && pod install || echo "iOS pods not available or not on macOS"
 	@echo "Mobile setup complete! You can now run 'make mobile-ios' or 'make mobile-android'"
 
 mobile-fix-ios: ## Fix iOS simulator issues
@@ -102,8 +121,10 @@ mobile-fix-ios: ## Fix iOS simulator issues
 	@echo "1. Opening Xcode to download simulators..."
 	@open -a Xcode
 	@echo "2. Please go to Xcode > Settings > Platforms and download iOS simulators"
-	@echo "3. Alternatively, listing available simulators:"
-	@xcrun simctl list devices
+	@echo "3. Installing/updating iOS pods..."
+	@cd mobile/ios 2>/dev/null && pod install --repo-update || echo "iOS pods not available"
+	@echo "4. Listing available simulators:"
+	@xcrun simctl list devices available | grep -E "iPhone|iPad" || echo "No simulators found"
 	@echo ""
 	@echo "If no simulators are available, install them via Xcode"
 
@@ -112,7 +133,7 @@ mobile-ios-device: ## List available iOS simulators and let user choose
 	@xcrun simctl list devices available | grep -E "iPhone|iPad"
 	@echo ""
 	@echo "To use a specific device, run:"
-	@echo "cd mobile && npx expo start --ios --simulator='iPhone 15'"
+	@echo "cd mobile && npx react-native run-ios --simulator='iPhone 15'"
 
 mobile-test: ## Test mobile development setup
 	@./scripts/test-mobile-setup.sh
@@ -120,13 +141,47 @@ mobile-test: ## Test mobile development setup
 mobile-fix-ios-simulator: ## Fix iOS simulator issues
 	@./scripts/fix-ios-simulator.sh
 
-mobile-browser: ## Open Expo in browser (quick test without simulators)
-	@echo "Starting Expo and opening in browser..."
-	@echo "This opens the Expo DevTools in your browser"
-	@cd mobile && expo start --web --host localhost --port 8082
+mobile-browser: ## Open Metro DevTools in browser
+	@echo "Starting Metro bundler and opening DevTools in browser..."
+	@echo "This opens the Metro DevTools in your browser"
+	@cd mobile && npm start -- --port=8082
+	@echo "Open http://localhost:8082 in your browser for Metro DevTools"
 
-mobile-fix-upgrade: ## Fix issues after Expo SDK upgrade
-	@./scripts/fix-expo-upgrade.sh
+mobile-fix-upgrade: ## Fix issues after React Native upgrade
+	@echo "Fixing issues after React Native upgrade..."
+	@cd mobile && rm -rf node_modules package-lock.json
+	@cd mobile && npm install
+	@cd mobile/ios 2>/dev/null && pod install || echo "iOS pods not available"
+	@cd mobile && npx react-native start --reset-cache || npm start -- --reset-cache
+	@echo "React Native upgrade fixes complete"
+
+mobile-metro-start: ## Start Metro bundler only (no simulator)
+	@echo "Starting Metro bundler on port 8082..."
+	@cd mobile && npm start -- --port=8082
+
+mobile-metro-stop: ## Stop Metro bundler
+	@echo "Stopping Metro bundler..."
+	@pkill -f "node.*metro" || echo "Metro bundler not running"
+
+mobile-build-ios: ## Build iOS app for production
+	@echo "Building iOS app for production..."
+	@cd mobile && npx react-native run-ios --configuration Release
+
+mobile-build-android: ## Build Android app for production  
+	@echo "Building Android app for production..."
+	@cd mobile && npx react-native run-android --variant=release
+
+mobile-logs-ios: ## Show iOS simulator logs
+	@echo "Showing iOS simulator logs..."
+	@xcrun simctl spawn booted log stream --predicate 'process == "mishmob-mobile"' || echo "No iOS simulator running"
+
+mobile-logs-android: ## Show Android emulator logs
+	@echo "Showing Android emulator logs..."
+	@adb logcat | grep -i mishmob || echo "No Android emulator connected"
+
+mobile-doctor: ## Check React Native development environment
+	@echo "Checking React Native development environment..."
+	@npx react-native doctor || echo "React Native CLI not installed globally"
 
 # Prevent make from treating service names as targets
 %:

@@ -27,7 +27,7 @@ class SecureTokenGenerator:
     """
     
     # Token validity window (seconds)
-    TOKEN_VALIDITY_SECONDS = 60
+    TOKEN_VALIDITY_SECONDS = 30
     GRACE_PERIOD_SECONDS = 5
     
     # Rate limiting
@@ -185,12 +185,11 @@ class CheckInValidator:
         if not event.is_check_in_open():
             return False, "Check-in is not open for this event"
         
-        # Check user verification
+        # Check user verification (UserProfile is related_name='profile')
         try:
-            profile = ticket.user.userprofile
-            if not profile.is_verified:
+            if not ticket.user.profile.is_verified:
                 return False, "User verification required"
-        except:
+        except Exception:
             return False, "User profile not found"
         
         # Check device registration if required

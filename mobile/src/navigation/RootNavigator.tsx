@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../contexts/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -18,6 +18,14 @@ import IdVerificationScreen from '../screens/main/IdVerificationScreen';
 import TestScreen from '../screens/main/TestScreen';
 import MyTicketsScreen from '../screens/main/MyTicketsScreen';
 
+// Event Screens
+import { EventTicketScreen } from '../screens/events/EventTicketScreen';
+import { EventScannerScreen } from '../screens/events/EventScannerScreen';
+
+// Host Screens
+import HostEventsScreen from '../screens/host/HostEventsScreen';
+import HostScannerScreen from '../screens/host/HostScannerScreen';
+
 const AuthStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const MainStack = createNativeStackNavigator();
@@ -31,7 +39,7 @@ function AuthNavigator() {
   );
 }
 
-function TabNavigator() {
+function VolunteerTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -44,9 +52,6 @@ function TabNavigator() {
               break;
             case 'Opportunities':
               iconName = 'magnify';
-              break;
-            case 'Scan':
-              iconName = 'qrcode-scan';
               break;
             case 'Profile':
               iconName = 'account';
@@ -63,18 +68,57 @@ function TabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Opportunities" component={OpportunitiesScreen} />
-      <Tab.Screen name="Scan" component={ScanScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+function HostTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          switch (route.name) {
+            case 'Dashboard':
+              iconName = 'view-dashboard';
+              break;
+            case 'Events':
+              iconName = 'calendar-multiple';
+              break;
+            case 'Scanner':
+              iconName = 'qrcode-scan';
+              break;
+            case 'Profile':
+              iconName = 'account';
+              break;
+            default:
+              iconName = 'help';
+          }
+
+          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Dashboard" component={HomeScreen} />
+      <Tab.Screen name="Events" component={HostEventsScreen} options={{ title: 'My Events' }} />
+      <Tab.Screen name="Scanner" component={HostScannerScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
 
 function MainNavigator() {
+  const { isHost } = useAuth();
+
   return (
     <MainStack.Navigator>
       <MainStack.Screen
         name="MainTabs"
-        component={TabNavigator}
+        component={isHost ? HostTabNavigator : VolunteerTabNavigator}
         options={{ headerShown: false }}
       />
       <MainStack.Screen
@@ -90,6 +134,22 @@ function MainNavigator() {
         component={MyTicketsScreen}
         options={{ 
           title: 'My Tickets',
+          headerBackTitle: 'Back'
+        }}
+      />
+      <MainStack.Screen
+        name="EventTicket"
+        component={EventTicketScreen}
+        options={{ 
+          title: 'Event Ticket',
+          headerBackTitle: 'Back'
+        }}
+      />
+      <MainStack.Screen
+        name="EventScanner"
+        component={EventScannerScreen}
+        options={{ 
+          title: 'QR Scanner',
           headerBackTitle: 'Back'
         }}
       />

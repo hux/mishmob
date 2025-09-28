@@ -6,7 +6,14 @@ from ninja import Router
 from ninja.responses import Response
 from pydantic import BaseModel
 from typing import Optional
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from users.models import UserProfile
+import jwt
+from django.conf import settings
+from datetime import datetime, timedelta
 
+User = get_user_model()
 router = Router(tags=["Mock Authentication"])
 
 class LoginRequest(BaseModel):
@@ -66,15 +73,52 @@ def mock_login(request, data: LoginRequest):
     if not user_data or user_data["password"] != data.password:
         return Response({"error": "Invalid credentials"}, status=401)
     
-    # Generate a simple mock token
-    mock_token = f"mock-jwt-token-{data.username}-{user_data['id']}"
+    # Create or get the user from database
+    with transaction.atomic():
+        user, created = User.objects.get_or_create(
+            username=data.username,
+            defaults={
+                'email': user_data["email"],
+                'first_name': user_data["first_name"],
+                'last_name': user_data["last_name"],
+                'user_type': user_data["user_type"],
+                'is_verified': user_data["is_verified"],
+                'zip_code': user_data["zip_code"],
+            }
+        )
+        
+        if created:
+            # Set password for the new user
+            user.set_password(data.password)
+            user.save()
+            
+            # Create user profile
+            UserProfile.objects.create(
+                user=user,
+                is_verified=user_data["is_verified"],
+                bio=f"Test user {data.username}"
+            )
+            print(f"Created new user in database: {data.username}")
+        else:
+            print(f"Retrieved existing user: {data.username}")
+    
+    # Generate a real JWT token
+    payload = {
+        'user_id': str(user.id),
+        'username': user.username,
+        'exp': datetime.utcnow() + timedelta(hours=24),
+        'iat': datetime.utcnow()
+    }
+    
+    # Use a simple secret for mock auth (in production, use settings.SECRET_KEY)
+    jwt_token = jwt.encode(payload, 'mock-secret-key', algorithm='HS256')
     
     return TokenResponse(
-        access_token=mock_token,
-        user_id=user_data["id"],
-        username=data.username,
-        email=user_data["email"],
-        user_type=user_data["user_type"]
+        access_token=jwt_token,
+        user_id=str(user.id),
+        username=user.username,
+        email=user.email,
+        user_type=user.user_type
     )
 
 @router.get("/me", response=UserResponse)

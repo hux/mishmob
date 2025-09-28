@@ -4,10 +4,10 @@ import { Card, Button, Title, Paragraph, Chip, Avatar } from 'react-native-paper
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { verificationApi } from '../../services/api';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function ProfileScreen({ navigation }: any) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [verificationStatus, setVerificationStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +46,7 @@ export default function ProfileScreen({ navigation }: any) {
               />
               {verificationStatus?.is_verified && (
                 <View style={styles.verifiedBadge}>
-                  <MaterialCommunityIcons name="check-decagram" size={24} color="#10B981" />
+                  <Icon name="check-decagram" size={24} color="#10B981" />
                 </View>
               )}
             </View>
@@ -121,7 +121,7 @@ export default function ProfileScreen({ navigation }: any) {
             </Button>
             <Button 
               mode="outlined" 
-              onPress={() => {}}
+              onPress={() => logout()}
               icon="logout"
               style={styles.actionButton}
               textColor="#EF4444"

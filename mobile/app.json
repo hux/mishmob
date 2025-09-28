@@ -1,43 +1,4 @@
 {
-  "expo": {
-    "name": "MishMob",
-    "slug": "mishmob",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.mishmob.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for event check-in.",
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to find volunteer opportunities near you."
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.mishmob.app",
-      "permissions": [
-        "CAMERA",
-        "ACCESS_FINE_LOCATION"
-      ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-camera",
-      "expo-location",
-      "expo-notifications",
-      "expo-barcode-scanner"
-    ]
-  }
+  "name": "MishMobMobile",
+  "displayName": "MishMobMobile"
 }

@@ -105,16 +105,6 @@ def login_user(request, data: LoginRequest):
     
     print(f"Login attempt for username: {data.username}")
     
-    # For testing, create a simple hardcoded response
-    if data.username == "testuser" and data.password == "testpass123":
-        return TokenResponse(
-            access_token="test-token-for-mobile-development",
-            user_id="test-user-id",
-            username="testuser",
-            email="test@example.com",
-            user_type="volunteer"
-        )
-    
     # Check if user exists
     try:
         existing_user = User.objects.get(username=data.username)

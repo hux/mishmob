@@ -13,7 +13,7 @@ import { BarCodeScanner } from 'expo-barcode-scanner';
 import { Camera } from 'expo-camera';
 import * as Location from 'expo-location';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { api } from '../../services/api';
 import { colors, typography } from '../../styles/theme';
 
@@ -164,7 +164,7 @@ export const EventScannerScreen: React.FC = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.white} />
+            <Icon name="arrow-back" size={24} color={colors.white} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={styles.eventName}>{eventTitle}</Text>
@@ -174,7 +174,7 @@ export const EventScannerScreen: React.FC = () => {
             style={styles.torchButton}
             onPress={() => setTorchOn(!torchOn)}
           >
-            <Ionicons
+            <Icon
               name={torchOn ? 'flash' : 'flash-off'}
               size={24}
               color={colors.white}
@@ -217,7 +217,7 @@ export const EventScannerScreen: React.FC = () => {
             styles.modalContent,
             lastResult?.success ? styles.successModal : styles.errorModal
           ]}>
-            <Ionicons
+            <Icon
               name={lastResult?.success ? 'checkmark-circle' : 'close-circle'}
               size={64}
               color={lastResult?.success ? colors.success.main : colors.error}

@@ -1,51 +1,76 @@
-import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
-// Get API URL from environment or use default
-// For Android emulator, localhost refers to the emulator itself, not the host machine
-// Use 10.0.2.2 for Android emulator to access host machine's localhost
-const getApiUrl = () => {
-  if (Constants.expoConfig?.extra?.apiUrl) {
-    return Constants.expoConfig.extra.apiUrl;
+// Get API URL based on platform and device type
+const getApiUrl = async () => {
+  // For development, use localhost for iOS simulator
+  if (Platform.OS === 'ios') {
+    const isSimulator = await DeviceInfo.isEmulator();
+    if (isSimulator) {
+      return 'http://localhost:8001/api';
+    }
+    // For physical iOS device, use your computer's IP
+    // Find with: ifconfig | grep "inet " | grep -v 127.0.0.1
+    return 'http://192.168.1.170:8001/api'; // Update this to your computer's IP
   }
-  
-  // For physical devices and simulators, use your computer's IP
-  // You can find this with: ifconfig | grep "inet " | grep -v 127.0.0.1
-  const HOST_IP = '192.168.1.170'; // Update this to your computer's IP
   
   // Android emulator needs special IP to access host machine
-  if (Platform.OS === 'android' && !Constants.isDevice) {
-    return 'http://10.0.2.2:8090/api';
+  if (Platform.OS === 'android') {
+    const isEmulator = await DeviceInfo.isEmulator();
+    if (isEmulator) {
+      return 'http://10.0.2.2:8001/api';
+    }
+    // For physical Android device, use your computer's IP
+    return 'http://192.168.1.170:8001/api'; // Update this to your computer's IP
   }
   
-  // iOS simulator can use localhost
-  if (Platform.OS === 'ios' && !Constants.isDevice) {
-    return 'http://localhost:8090/api';
-  }
-  
-  // Physical device needs actual IP
-  return `http://${HOST_IP}:8090/api`;
+  // Fallback
+  return 'http://localhost:8001/api';
 };
 
-const API_BASE_URL = getApiUrl();
-console.log('API_BASE_URL:', API_BASE_URL);
+// Initialize API URL (will be set asynchronously)
+let API_BASE_URL = 'http://localhost:8001/api';
 
-// Re-export types from shared
-export * from 'api-types';
+// Initialize the API URL
+getApiUrl().then(url => {
+  API_BASE_URL = url;
+  console.log('API_BASE_URL initialized:', API_BASE_URL);
+}).catch(error => {
+  console.error('Failed to initialize API URL:', error);
+  API_BASE_URL = 'http://localhost:8080/api'; // fallback
+});
 
-// Token management using SecureStore
+// Re-export types from shared (when available)
+// export * from 'api-types';
+
+// Token management using AsyncStorage
 export const tokenManager = {
   async getToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('auth_token');
+    try {
+      return await AsyncStorage.getItem('auth_token');
+    } catch (error) {
+      console.error('Failed to get token:', error);
+      return null;
+    }
   },
   
   async setToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync('auth_token', token);
+    try {
+      await AsyncStorage.setItem('auth_token', token);
+    } catch (error) {
+      console.error('Failed to set token:', error);
+      throw error;
+    }
   },
   
   async removeToken(): Promise<void> {
-    await SecureStore.deleteItemAsync('auth_token');
+    try {
+      await AsyncStorage.removeItem('auth_token');
+    } catch (error) {
+      console.error('Failed to remove token:', error);
+      throw error;
+    }
   },
 };
 
@@ -156,10 +181,24 @@ export const opportunitiesApi = {
   },
 };
 
+// Events API
+export const eventsApi = {
+  async getMyTickets() {
+    return fetchWithAuth('/events/my-tickets');
+  },
+  
+  async registerForEvent(opportunityId: string, deviceInfo?: any) {
+    return fetchWithAuth(`/opportunities/${opportunityId}/register-for-event`, {
+      method: 'POST',
+      body: JSON.stringify(deviceInfo || {}),
+    });
+  },
+};
+
 // Tickets API
 export const ticketsApi = {
-  async getQRCode(qrData: string) {
-    return fetchWithAuth(`/tickets/qr/${encodeURIComponent(qrData)}`);
+  async getQRCode(ticketId: string) {
+    return fetchWithAuth(`/tickets/${ticketId}/qr-code`);
   },
 };
 

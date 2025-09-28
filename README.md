@@ -26,8 +26,7 @@ The platform consists of three main components:
 
 1. **Backend API** (`/backend`) - Django + Django Ninja REST API
 2. **Web Application** (`/frontend`) - React + TypeScript web app
-3. **Mobile Application** (`/mobile-cli`) - React Native CLI with native modules support
-   - Alternative: (`/mobile`) - React Native + Expo (simpler setup)
+3. **Mobile Application** (`/mobile`) - React Native CLI with Metro bundler and native modules
 
 All components share common TypeScript types (`/shared`) and are orchestrated using Docker Compose.
 
@@ -80,7 +79,7 @@ We provide scripts to automatically set up your development environment:
 
 - **React Native Tools**:
   - Watchman: `brew install watchman`
-  - React Native CLI: `npm install -g react-native-cli`
+  - React Native CLI: `npm install -g @react-native-community/cli`
 
 ### 1. Clone the Repository
 ```bash
@@ -114,14 +113,32 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose up -d web
 ```
 
-### 4. Start Mobile App (React Native)
+### 4. Start Mobile App (React Native CLI with Metro)
 
 #### Prerequisites for Mobile Development on macOS
-- **iOS**: Xcode (from App Store) with iOS Simulator
+- **iOS**: Xcode (from App Store) with iOS Simulator and CocoaPods
 - **Android**: Android Studio with Android Emulator configured
-- **Both**: Node.js 20+ and Watchman (`brew install watchman`)
+- **Both**: Node.js 20+, Watchman (`brew install watchman`), and React Native CLI
 
-#### Option A: Using Expo (Recommended for Development)
+#### Quick Start with Makefile Commands
+```bash
+# Complete mobile setup (dependencies + iOS pods)
+make mobile-setup
+
+# Start iOS app (Metro + Simulator)
+make mobile-ios
+
+# Start Android app (Metro + Emulator)
+make mobile-android
+
+# Start Metro bundler only
+make mobile
+
+# Check development environment
+make mobile-doctor
+```
+
+#### Manual Setup - iOS Development
 ```bash
 # Navigate to mobile directory
 cd mobile
@@ -129,29 +146,14 @@ cd mobile
 # Install dependencies
 npm install
 
-# Start Expo development server
-npx expo start
-
-# Then press:
-# - 'i' for iOS Simulator
-# - 'a' for Android Emulator
-# - Scan QR code with Expo Go app on physical device
-```
-
-#### Option B: iOS Simulator (macOS only)
-```bash
-# First time setup
-cd mobile
-npm install
-
-# Install iOS dependencies
+# Install iOS dependencies (CocoaPods)
 cd ios && pod install && cd ..
 
-# Open iOS Simulator
-open -a Simulator
+# Start Metro bundler
+npm start -- --port=8082
 
-# Run the app
-npx react-native run-ios
+# In another terminal, run iOS app
+npm run ios
 
 # Or specify a device
 npx react-native run-ios --simulator="iPhone 15 Pro"
@@ -160,7 +162,7 @@ npx react-native run-ios --simulator="iPhone 15 Pro"
 xcrun simctl list devices
 ```
 
-#### Option C: Android Emulator (macOS)
+#### Manual Setup - Android Development
 ```bash
 # First, ensure Android Emulator is running
 # Open Android Studio > Tools > AVD Manager > Launch emulator
@@ -172,8 +174,11 @@ emulator -avd Pixel_7_Pro_API_34
 cd mobile
 npm install
 
-# Run the app
-npx react-native run-android
+# Start Metro bundler
+npm start -- --port=8082
+
+# In another terminal, run Android app
+npm run android
 
 # If emulator not detected, check with:
 adb devices
@@ -184,22 +189,34 @@ adb devices
 # For React Native issues
 npx react-native doctor
 
-# Clear caches
+# Clear caches (using Makefile)
+make mobile-clear-cache
+
+# Complete clean and reinstall
+make mobile-clean
+make mobile-setup
+
+# Manual cache clearing
 cd mobile
 watchman watch-del-all
 rm -rf node_modules
 npm install
 cd ios && rm -rf Pods && pod install && cd ..
 npx react-native start --reset-cache
+
+# Stop Metro bundler if needed
+make mobile-metro-stop
 ```
 
 ## 🌐 Access Points
 
 Once everything is running, you can access:
 
-- **Web Application**: http://localhost:5175
-- **API Documentation**: http://localhost:8001/api/docs
-- **Django Admin**: http://localhost:8001/admin
+- **Web Application**: http://localhost:8081
+- **Mobile Metro DevTools**: http://localhost:8082
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api/docs
+- **Django Admin**: http://localhost:8080/admin
 - **Meilisearch Dashboard**: http://localhost:7701 (Master Key: `dev-master-key`)
 
 ## 📱 Mobile Development Tips
@@ -224,9 +241,9 @@ Once everything is running, you can access:
    # On macOS
    ipconfig getifaddr en0
    ```
-3. Update the API URL in `mobile/.env`:
-   ```
-   API_URL=http://YOUR_COMPUTER_IP:8000/api
+3. Update the API URL in `mobile/src/services/api.ts`:
+   ```typescript
+   const API_BASE_URL = 'http://YOUR_COMPUTER_IP:8080/api';
    ```
 4. For iOS: Open in Xcode and run on connected device
 5. For Android: Enable Developer Mode, USB debugging, and run:
@@ -281,11 +298,21 @@ cd mobile && npm install <package-name>
 # Run tests
 cd mobile && npm test
 
-# Build iOS
-cd mobile && npx expo build:ios
+# Build iOS for production
+make mobile-build-ios
 
-# Build Android
-cd mobile && npx expo build:android
+# Build Android for production
+make mobile-build-android
+
+# View iOS logs
+make mobile-logs-ios
+
+# View Android logs
+make mobile-logs-android
+
+# Manual builds
+cd mobile && npx react-native run-ios --configuration Release
+cd mobile && npx react-native run-android --variant=release
 ```
 
 ## 🧪 Testing
@@ -314,11 +341,18 @@ Use the interactive API documentation at http://localhost:8000/api/docs
 ### iOS Simulator Issues
 ```bash
 # Reset Metro cache
-cd mobile && npx react-native start --reset-cache
+make mobile-clear-cache
 
-# Clean and rebuild
+# Fix iOS simulator issues
+make mobile-fix-ios
+
+# Manual fixes
+cd mobile && npx react-native start --reset-cache
 cd mobile/ios && xcodebuild clean && cd ..
 npx react-native run-ios
+
+# Update iOS pods
+cd mobile/ios && pod install --repo-update
 ```
 
 ### Database Connection Issues

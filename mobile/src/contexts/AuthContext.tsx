@@ -8,12 +8,19 @@ interface User {
   first_name: string;
   last_name: string;
   user_type: string;
+  is_verified: boolean;
+  profile_picture?: string;
+  zip_code?: string;
+  organization_id?: number;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isHost: boolean;
+  isVolunteer: boolean;
+  hasHostProfile: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -33,11 +40,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       console.log('Attempting to get current user...');
-      const userData = await authApi.getCurrentUser();
-      console.log('User data received:', userData);
-      setUser(userData);
+      
+      // Add timeout to prevent hanging when backend is unavailable
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      try {
+        const userData = await authApi.getCurrentUser();
+        clearTimeout(timeoutId);
+        console.log('User data received:', userData);
+        setUser(userData);
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          console.log('Request timed out - backend may be unavailable');
+        } else {
+          console.log('Failed to get current user:', error);
+        }
+        setUser(null);
+      }
     } catch (error) {
-      console.log('Failed to get current user:', error);
+      console.log('Unexpected error in refreshUser:', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -54,12 +77,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const isHost = user?.user_type === 'host' || user?.user_type === 'Host';
+  const isVolunteer = user?.user_type === 'volunteer';
+  const hasHostProfile = isHost && !!user?.organization_id;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated: !!user,
+        isHost,
+        isVolunteer,
+        hasHostProfile,
         login,
         logout,
         refreshUser,

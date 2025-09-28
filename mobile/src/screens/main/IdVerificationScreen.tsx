@@ -8,7 +8,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { RNCamera } from 'react-native-camera';
 import { Button, Card, Title, Paragraph, ProgressBar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { verificationApi } from '../../services/api';
@@ -29,19 +29,13 @@ export default function IdVerificationScreen({ navigation }: any) {
   const [selfieAttempts, setSelfieAttempts] = useState(0);
   const [loading, setLoading] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, setPermission] = useState<string | null>(null);
   const [camera, setCamera] = useState<any>(null);
   const [captureType, setCaptureType] = useState<CaptureType>('id');
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
 
   const handleStartVerification = async () => {
-    if (!permission?.granted) {
-      const { status } = await requestPermission();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Camera access is required for ID verification.');
-        return;
-      }
-    }
+    // Camera permissions are handled by RNCamera component
     setStep('captureId');
     setCaptureType('id');
     setCameraFacing('back'); // Back camera for ID photo
@@ -130,10 +124,11 @@ export default function IdVerificationScreen({ navigation }: any) {
 
   const renderCamera = () => (
     <View style={styles.cameraContainer}>
-      <CameraView
+      <RNCamera
         style={styles.camera}
-        facing={cameraFacing}
+        type={cameraFacing === 'back' ? RNCamera.Constants.Type.back : RNCamera.Constants.Type.front}
         ref={(ref) => setCamera(ref)}
+        captureAudio={false}
       >
         <View style={styles.cameraOverlay}>
           <Text style={styles.cameraText}>
@@ -143,7 +138,7 @@ export default function IdVerificationScreen({ navigation }: any) {
           </Text>
           <View style={styles.frameGuide} />
         </View>
-      </CameraView>
+      </RNCamera>
       <View style={styles.cameraControls}>
         <Button 
           mode="outlined" 
@@ -213,9 +208,7 @@ export default function IdVerificationScreen({ navigation }: any) {
     </ScrollView>
   );
 
-  if (!permission) {
-    return <View />;
-  }
+  // Remove permission check as RNCamera handles it internally
 
   return (
     <SafeAreaView style={styles.safeArea}>

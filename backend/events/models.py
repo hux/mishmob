@@ -166,11 +166,10 @@ class EventTicket(models.Model):
             return False
         if not self.event.is_check_in_open():
             return False
-        # Verify user is still verified
+        # Verify user is still verified (via related_name 'profile')
         try:
-            profile = self.user.userprofile
-            return profile.is_verified
-        except:
+            return bool(self.user.profile and self.user.profile.is_verified)
+        except Exception:
             return False
 
 

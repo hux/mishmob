@@ -200,7 +200,7 @@ if DEBUG:
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://mishmob.com,https://www.mishmob.com', cast=Csv())
 
 # Custom User Model
-# AUTH_USER_MODEL = 'users.User'  # TODO: This needs to be set before initial migration
+AUTH_USER_MODEL = 'users.User'
 
 # Email Settings
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

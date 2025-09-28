@@ -86,7 +86,7 @@ def register_for_event(request, opportunity_id: str, registration: EventRegistra
     
     # Check user verification
     try:
-        profile = user.userprofile
+        profile = user.profile
         if not profile.is_verified:
             return Response({"error": "User verification required to register for events"}, status=403)
     except UserProfile.DoesNotExist:

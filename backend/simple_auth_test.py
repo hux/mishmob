@@ -5,7 +5,7 @@ Run with: python simple_auth_test.py
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 from io import BytesIO
 import qrcode
@@ -64,12 +64,16 @@ class AuthHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(response).encode())
             
-        elif self.path.startswith('/api/tickets/qr/'):
-            # Generate QR code for ticket
-            qr_data = self.path.split('/api/tickets/qr/')[-1]
-            # Decode URL encoding
-            import urllib.parse
-            qr_data = urllib.parse.unquote(qr_data)
+        elif '/qr-code' in self.path and self.path.startswith('/api/tickets/'):
+            # Extract ticket ID from path like /api/tickets/{ticket_id}/qr-code
+            parts = self.path.split('/')
+            if len(parts) >= 5 and parts[4] == 'qr-code':
+                ticket_id = parts[3]
+                # For now, use the ticket_id as the QR data
+                # In production, this would generate a secure token
+                qr_data = f"MISHMOB-{ticket_id}-{datetime.now().strftime('%H%M%S')}"
+            else:
+                qr_data = "INVALID-TICKET"
             
             print(f"Generating QR code for: {qr_data}")
             print(f"Current time: {datetime.now().isoformat()}")
@@ -93,9 +97,9 @@ class AuthHandler(BaseHTTPRequestHandler):
             img_str = base64.b64encode(buffer.getvalue()).decode()
             
             response = {
-                "qr_data": qr_data,
-                "qr_image": f"data:image/png;base64,{img_str}",
-                "generated_at": datetime.now().isoformat()
+                "qr_code_base64": f"data:image/png;base64,{img_str}",
+                "expires_at": (datetime.now() + timedelta(seconds=30)).isoformat(),
+                "valid_seconds": 30
             }
             
             self.send_response(200)
