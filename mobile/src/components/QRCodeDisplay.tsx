@@ -51,7 +51,12 @@ export default function QRCodeDisplay({
     } catch (err: any) {
       console.error('Failed to fetch QR code:', err);
       if (mountedRef.current) {
-        setError(err.message || 'Failed to generate QR code');
+        // Handle rate limit errors specifically
+        if (err.message?.includes('Rate limit exceeded')) {
+          setError('Rate limit reached. QR code will refresh automatically.');
+        } else {
+          setError(err.message || 'Failed to generate QR code');
+        }
       }
     } finally {
       if (mountedRef.current) {
@@ -67,12 +72,11 @@ export default function QRCodeDisplay({
     // Initial fetch
     fetchQRCode();
     
-    // Set up auto-refresh if enabled
+    // Set up auto-refresh if enabled - reduced frequency to avoid rate limits
     if (autoRefresh) {
       refreshIntervalRef.current = setInterval(() => {
         fetchQRCode();
-      }, 30000); // Refresh every 30 seconds
-    }
+      }, 25000); // Refresh every 25 seconds (QR codes valid for 30s with 5s grace)
     
     return () => {
       mountedRef.current = false;

@@ -30,8 +30,8 @@ class SecureTokenGenerator:
     TOKEN_VALIDITY_SECONDS = 30
     GRACE_PERIOD_SECONDS = 5
     
-    # Rate limiting
-    MAX_GENERATION_PER_MINUTE = 10
+    # Rate limiting - increased for mobile app auto-refresh
+    MAX_GENERATION_PER_MINUTE = 60  # Allow 1 per second for auto-refresh
     MAX_VALIDATION_PER_MINUTE = 100
     
     @classmethod
@@ -46,8 +46,14 @@ class SecureTokenGenerator:
         rate_key = f"qr_gen:{user_id}"
         attempts = cache.get(rate_key, 0)
         if attempts >= cls.MAX_GENERATION_PER_MINUTE:
-            raise ValueError("Rate limit exceeded. Please wait before generating new codes.")
+            raise ValueError(f"Rate limit exceeded. Generated {attempts} QR codes in last minute. Max allowed: {cls.MAX_GENERATION_PER_MINUTE}. Please wait.")
         cache.set(rate_key, attempts + 1, 60)
+        
+        # Log for debugging
+        if attempts > cls.MAX_GENERATION_PER_MINUTE * 0.8:  # Warn at 80% of limit
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"User {user_id} approaching QR generation rate limit: {attempts + 1}/{cls.MAX_GENERATION_PER_MINUTE}")
         
         # Generate expiration time
         now = datetime.now(dt_timezone.utc)
