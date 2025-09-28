@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../contexts/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Icon } from '../components/common/Icon';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -60,7 +60,7 @@ function VolunteerTabNavigator() {
               iconName = 'help';
           }
 
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          return <Icon library="MaterialCommunityIcons" name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: 'gray',
@@ -97,7 +97,7 @@ function HostTabNavigator() {
               iconName = 'help';
           }
 
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          return <Icon library="MaterialCommunityIcons" name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: 'gray',

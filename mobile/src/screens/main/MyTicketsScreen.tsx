@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Card, Title, Paragraph, Button, Text, Chip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CommonIcon } from '../../components/common/Icon';
 import { format, parseISO } from 'date-fns';
 import { eventsApi } from '../../services/api';
 import type { MainStackScreenProps } from '../../navigation/types';
@@ -133,7 +133,7 @@ export default function MyTicketsScreen({ navigation }: Props) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Icon name="alert-circle" size={60} color="#EF4444" />
+          <CommonIcon type="error" size={60} color="#EF4444" />
           <Text style={styles.errorText}>{error}</Text>
           <Button mode="contained" onPress={() => fetchTickets()} style={styles.retryButton}>
             Retry
@@ -195,15 +195,15 @@ export default function MyTicketsScreen({ navigation }: Props) {
                   </View>
                   <View style={styles.eventInfo}>
                     <View style={styles.infoRow}>
-                      <Icon name="calendar" size={18} color="#666" />
+                      <CommonIcon type="calendar" size={18} color="#666" />
                       <Text style={styles.infoText}>{date}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                      <Icon name="clock-outline" size={18} color="#666" />
+                      <CommonIcon type="clock" size={18} color="#666" />
                       <Text style={styles.infoText}>{time}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                      <Icon name="map-marker" size={18} color="#666" />
+                      <CommonIcon type="location" size={18} color="#666" />
                       <Text style={styles.infoText}>{ticket.location}</Text>
                     </View>
                     <Text style={{fontSize: 10, color: 'red', marginTop: 4}}>
@@ -234,7 +234,7 @@ export default function MyTicketsScreen({ navigation }: Props) {
 
         {tickets.length === 0 && !loading && (
           <View style={styles.emptyState}>
-            <Icon name="ticket-outline" size={80} color="#ccc" />
+            <CommonIcon type="ticket" size={80} color="#ccc" />
             <Text style={styles.emptyStateText}>No tickets yet</Text>
           </View>
         )}

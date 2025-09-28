@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CommonIcon, Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 
 interface ActiveEvent {
@@ -91,7 +91,7 @@ export default function HostScannerScreen() {
   if (activeEvents.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Icon name="qrcode-scan" size={80} color="#ccc" />
+        <CommonIcon type="qrcode" size={80} color="#ccc" />
         <Text style={styles.emptyTitle}>No Active Events</Text>
         <Text style={styles.emptySubtitle}>
           You don't have any events with active check-in windows right now.
@@ -109,7 +109,7 @@ export default function HostScannerScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Icon name="qrcode-scan" size={48} color="#3B82F6" />
+        <CommonIcon type="qrcode" size={48} color="#3B82F6" />
         <Text style={styles.headerTitle}>QR Code Scanner</Text>
         <Text style={styles.headerSubtitle}>
           Select an event to start checking in volunteers
@@ -127,17 +127,17 @@ export default function HostScannerScreen() {
           >
             <View style={styles.eventHeader}>
               <Text style={styles.eventTitle}>{event.title}</Text>
-              <Icon name="chevron-right" size={24} color="#666" />
+              <Icon library="MaterialCommunityIcons" name="chevron-right" size={24} color="#666" />
             </View>
             
             <View style={styles.eventDetails}>
               <View style={styles.detailRow}>
-                <Icon name="map-marker" size={16} color="#666" />
+                <CommonIcon type="location" size={16} color="#666" />
                 <Text style={styles.detailText}>{event.location_name}</Text>
               </View>
               
               <View style={styles.detailRow}>
-                <Icon name="clock-outline" size={16} color="#666" />
+                <CommonIcon type="clock" size={16} color="#666" />
                 <Text style={styles.detailText}>
                   {getTimeRemaining(event.check_in_closes_at)}
                 </Text>
@@ -157,7 +157,7 @@ export default function HostScannerScreen() {
             </View>
 
             <View style={styles.scanIndicator}>
-              <Icon name="qrcode-scan" size={20} color="#3B82F6" />
+              <CommonIcon type="qrcode" size={20} color="#3B82F6" />
               <Text style={styles.scanText}>Tap to start scanning</Text>
             </View>
           </TouchableOpacity>
@@ -168,19 +168,19 @@ export default function HostScannerScreen() {
         <Text style={styles.instructionsTitle}>How to use the scanner:</Text>
         <View style={styles.instructionsList}>
           <View style={styles.instructionItem}>
-            <Icon name="numeric-1-circle" size={24} color="#3B82F6" />
+            <Icon library="MaterialCommunityIcons" name="numeric-1-circle" size={24} color="#3B82F6" />
             <Text style={styles.instructionText}>
               Select an active event from the list above
             </Text>
           </View>
           <View style={styles.instructionItem}>
-            <Icon name="numeric-2-circle" size={24} color="#3B82F6" />
+            <Icon library="MaterialCommunityIcons" name="numeric-2-circle" size={24} color="#3B82F6" />
             <Text style={styles.instructionText}>
               Ask volunteers to show their QR code ticket
             </Text>
           </View>
           <View style={styles.instructionItem}>
-            <Icon name="numeric-3-circle" size={24} color="#3B82F6" />
+            <Icon library="MaterialCommunityIcons" name="numeric-3-circle" size={24} color="#3B82F6" />
             <Text style={styles.instructionText}>
               Scan the QR code to check them in instantly
             </Text>

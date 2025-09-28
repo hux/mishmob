@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CommonIcon, Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 
 interface HostEvent {
@@ -120,11 +120,11 @@ export default function HostEventsScreen() {
 
       <View style={styles.eventDetails}>
         <View style={styles.detailRow}>
-          <Icon name="calendar" size={16} color="#666" />
+          <CommonIcon type="calendar" size={16} color="#666" />
           <Text style={styles.detailText}>{item.start_date}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Icon name="map-marker" size={16} color="#666" />
+          <CommonIcon type="location" size={16} color="#666" />
           <Text style={styles.detailText}>{item.location_name}</Text>
         </View>
       </View>
@@ -151,7 +151,7 @@ export default function HostEventsScreen() {
           style={styles.scanButton}
           onPress={() => handleStartScanning(item)}
         >
-          <Icon name="qrcode-scan" size={20} color="#fff" />
+          <CommonIcon type="qrcode" size={20} color="#fff" />
           <Text style={styles.scanButtonText}>Start Scanning</Text>
         </TouchableOpacity>
       )}
@@ -190,7 +190,7 @@ export default function HostEventsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="calendar-blank" size={64} color="#ccc" />
+            <CommonIcon type="calendar" size={64} color="#ccc" />
             <Text style={styles.emptyText}>No events yet</Text>
             <Text style={styles.emptySubtext}>
               Create your first event to start checking in volunteers

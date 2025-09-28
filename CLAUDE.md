@@ -328,16 +328,26 @@ npm run lint
 6. **Grow**: Develop new skills
 7. **Return**: Find next mission
 
-## Mobile App Features (React Native)
+## Mobile App Features (React Native CLI)
 - **Event Check-in/out**: QR codes or geolocation
 - **Push Notifications**: Application updates, alerts
 - **On-the-Go Communication**: Mobile-friendly forum/chat
 - **Profile Management**: Update profile anywhere
 
 ### Mobile Tech Stack
-- **Expo**: Streamlined development
-- **React Navigation**: Routing
-- **React Native Paper**: Material Design UI
-- **React Query**: Shared with web app
-- **Expo Camera**: QR scanning
-- **Expo Notifications**: Push notifications
+- **React Native CLI**: Native development with Metro bundler
+- **React Navigation**: Routing and navigation
+- **React Native Elements**: UI components
+- **React Query**: Shared with web app for state management
+- **react-native-vision-camera**: Modern camera API
+- **react-native-qrcode-scanner**: QR code scanning
+- **@react-native-community/push-notification-ios**: Push notifications
+- **react-native-permissions**: Device permissions management
+- **react-native-vector-icons**: Icon library
+
+### Mobile Development Environment
+- **Metro Bundler**: JavaScript bundler for React Native
+- **Android Studio**: Android development environment
+- **Xcode**: iOS development environment (macOS only)
+- **Java 11+**: Required for Android builds
+- **CocoaPods**: iOS dependency manager

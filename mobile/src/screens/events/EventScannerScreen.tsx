@@ -9,11 +9,11 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { BarCodeScanner } from 'expo-barcode-scanner';
-import { Camera } from 'expo-camera';
-import * as Location from 'expo-location';
+import QRCodeScanner from 'react-native-qrcode-scanner';
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { CommonIcon, Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 import { colors, typography } from '../../styles/theme';
 
@@ -26,8 +26,8 @@ interface CheckInResult {
 }
 
 interface ScanResult {
-  type: string;
   data: string;
+  type?: string;
 }
 
 export const EventScannerScreen: React.FC = () => {
@@ -48,11 +48,11 @@ export const EventScannerScreen: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
-      const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
-      setHasPermission(cameraStatus === 'granted');
+      const cameraStatus = await request(PERMISSIONS.ANDROID.CAMERA);
+      const locationStatus = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+      setHasPermission(cameraStatus === RESULTS.GRANTED);
       
-      if (locationStatus !== 'granted') {
+      if (locationStatus !== RESULTS.GRANTED) {
         Alert.alert(
           'Location Permission',
           'Location access helps verify check-ins. You can still scan without it.'
@@ -61,25 +61,25 @@ export const EventScannerScreen: React.FC = () => {
     })();
   }, []);
 
-  const getLocation = async () => {
-    try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        return {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-      }
-    } catch (error) {
-      console.log('Location error:', error);
-    }
-    return null;
+  const getLocation = async (): Promise<{ latitude: number; longitude: number } | null> => {
+    return new Promise((resolve) => {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.log('Location error:', error);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    });
   };
 
-  const handleBarCodeScanned = async ({ type, data }: ScanResult) => {
+  const handleBarCodeScanned = async ({ data }: ScanResult) => {
     if (scanned || processing) return;
 
     setScanned(true);
@@ -150,10 +150,12 @@ export const EventScannerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        style={StyleSheet.absoluteFillObject}
-        barCodeTypes={[BarCodeScanner.Constants.BarCodeType.qr]}
+      <QRCodeScanner
+        onRead={scanned ? undefined : handleBarCodeScanned}
+        flashMode={torchOn ? QRCodeScanner.Constants.FlashMode.torch : QRCodeScanner.Constants.FlashMode.off}
+        showMarker={false}
+        cameraStyle={StyleSheet.absoluteFillObject}
+        containerStyle={StyleSheet.absoluteFillObject}
       />
 
       {/* Overlay */}
@@ -164,7 +166,7 @@ export const EventScannerScreen: React.FC = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Icon name="arrow-back" size={24} color={colors.white} />
+            <CommonIcon type="back" size={24} color={colors.white} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={styles.eventName}>{eventTitle}</Text>
@@ -175,6 +177,7 @@ export const EventScannerScreen: React.FC = () => {
             onPress={() => setTorchOn(!torchOn)}
           >
             <Icon
+              library="Ionicons"
               name={torchOn ? 'flash' : 'flash-off'}
               size={24}
               color={colors.white}
@@ -218,6 +221,7 @@ export const EventScannerScreen: React.FC = () => {
             lastResult?.success ? styles.successModal : styles.errorModal
           ]}>
             <Icon
+              library="Ionicons"
               name={lastResult?.success ? 'checkmark-circle' : 'close-circle'}
               size={64}
               color={lastResult?.success ? colors.success.main : colors.error}

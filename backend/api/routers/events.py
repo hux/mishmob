@@ -190,9 +190,20 @@ def generate_qr_code(request, ticket_id: str):
     if ticket.user != request.user:
         return Response({"error": "Not authorized to access this ticket"}, status=403)
     
-    # Check if ticket is valid
-    if not ticket.is_valid():
-        return Response({"error": "Ticket is not valid for check-in"}, status=400)
+    # Check basic ticket validity (but allow QR generation even when check-in is closed)
+    if ticket.status != 'active':
+        return Response({"error": "Ticket is not active"}, status=400)
+    
+    if ticket.checked_in_at:
+        return Response({"error": "Ticket already used"}, status=400)
+    
+    # Verify user is still verified
+    try:
+        profile = ticket.user.profile
+        if not profile.is_verified:
+            return Response({"error": "User verification required"}, status=400)
+    except:
+        return Response({"error": "User profile not found"}, status=400)
     
     try:
         # Generate secure token

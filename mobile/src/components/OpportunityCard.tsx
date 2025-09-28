@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Title, Paragraph, Chip, Text } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CommonIcon, Icon } from './common/Icon';
 
 interface OpportunityCardProps {
   opportunity: {
@@ -28,10 +28,10 @@ export default function OpportunityCard({ opportunity, style, onPress }: Opportu
         </Title>
         
         <View style={styles.orgRow}>
-          <Icon name="domain" size={16} color="#666" />
+          <Icon library="MaterialCommunityIcons" name="domain" size={16} color="#666" />
           <Text style={styles.orgText}>{opportunity.organization}</Text>
           <View style={styles.rating}>
-            <Icon name="star" size={16} color="#F97316" />
+            <CommonIcon type="star" size={16} color="#F97316" />
             <Text style={styles.ratingText}>{opportunity.rating}</Text>
           </View>
         </View>
@@ -42,11 +42,11 @@ export default function OpportunityCard({ opportunity, style, onPress }: Opportu
 
         <View style={styles.details}>
           <View style={styles.detailItem}>
-            <Icon name="map-marker" size={16} color="#666" />
+            <CommonIcon type="location" size={16} color="#666" />
             <Text style={styles.detailText}>{opportunity.location}</Text>
           </View>
           <View style={styles.detailItem}>
-            <Icon name="clock-outline" size={16} color="#666" />
+            <CommonIcon type="clock" size={16} color="#666" />
             <Text style={styles.detailText}>{opportunity.commitment}</Text>
           </View>
         </View>

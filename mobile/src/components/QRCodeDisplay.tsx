@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Image, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, Image, StyleSheet, ActivityIndicator, Text, Platform } from 'react-native';
 import { ticketsApi } from '../services/api';
 
 interface QRCodeDisplayProps {
@@ -22,6 +22,7 @@ export default function QRCodeDisplay({
   const [qrData, setQrData] = useState<QRCodeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [imageKey, setImageKey] = useState(0);
   
@@ -44,6 +45,7 @@ export default function QRCodeDisplay({
         setQrData(response);
         setImageKey(prev => prev + 1);
         setCountdown(response.valid_seconds);
+        setImageError(null); // Clear any previous image errors
         console.log('QR code updated, valid for', response.valid_seconds, 'seconds');
       }
     } catch (err: any) {
@@ -124,16 +126,45 @@ export default function QRCodeDisplay({
     );
   }
   
+  // Ensure proper data URI format for Android
+  const getImageUri = (base64Data: string): string => {
+    // If it already has the data URI prefix, use it as is
+    if (base64Data.startsWith('data:image/')) {
+      return base64Data;
+    }
+    // Otherwise, add the prefix
+    return `data:image/png;base64,${base64Data}`;
+  };
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       {qrData?.qr_code_base64 ? (
         <>
-          <Image
-            key={`qr-image-${imageKey}`}
-            source={{ uri: qrData.qr_code_base64 }}
-            style={{ width: size - 40, height: size - 40 }}
-            resizeMode="contain"
-          />
+          {imageError ? (
+            <View style={styles.imageErrorContainer}>
+              <Text style={styles.errorText}>QR Display Error</Text>
+              <Text style={styles.errorSubtext}>{imageError}</Text>
+              <Text style={styles.debugText}>Platform: {Platform.OS}</Text>
+              <Text style={styles.debugText}>Data length: {qrData.qr_code_base64.length}</Text>
+            </View>
+          ) : (
+            <Image
+              key={`qr-image-${imageKey}`}
+              source={{ uri: getImageUri(qrData.qr_code_base64) }}
+              style={{ width: size - 40, height: size - 40 }}
+              resizeMode="contain"
+              onError={(error) => {
+                console.error('QR Code Image loading error:', error);
+                console.error('Platform:', Platform.OS);
+                console.error('Image URI:', getImageUri(qrData.qr_code_base64).substring(0, 100) + '...');
+                setImageError(`Failed to display QR code on ${Platform.OS}`);
+              }}
+              onLoad={() => {
+                console.log('QR Code Image loaded successfully on', Platform.OS);
+                setImageError(null);
+              }}
+            />
+          )}
           {autoRefresh && (
             <View style={styles.statusContainer}>
               {loading ? (
@@ -174,6 +205,10 @@ const styles = StyleSheet.create({
   errorContainer: {
     backgroundColor: '#FEE2E2',
   },
+  imageErrorContainer: {
+    alignItems: 'center',
+    padding: 16,
+  },
   errorText: {
     color: '#DC2626',
     fontSize: 14,
@@ -184,6 +219,12 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 10,
     marginTop: 4,
+    textAlign: 'center',
+  },
+  debugText: {
+    color: '#64748B',
+    fontSize: 9,
+    marginTop: 2,
     textAlign: 'center',
   },
   loadingText: {

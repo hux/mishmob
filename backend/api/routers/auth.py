@@ -149,7 +149,7 @@ def get_current_user(request):
     
     # Get organization ID if user is a host
     organization_id = None
-    if user.user_type == 'host':
+    if user.user_type.lower() == 'host':
         try:
             organization_id = user.host_profile.id
         except:

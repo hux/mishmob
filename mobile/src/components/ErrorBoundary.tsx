@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Text, Surface } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CommonIcon } from './common/Icon';
 import { theme } from '../theme';
 
 interface ErrorBoundaryState {
@@ -82,7 +82,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   return (
     <View style={styles.container}>
       <Surface style={styles.errorCard}>
-        <Icon name="alert-circle" size={64} color="#EF4444" style={styles.icon} />
+        <CommonIcon type="error" size={64} color="#EF4444" style={styles.icon} />
         
         <Text style={styles.title}>Something went wrong</Text>
         

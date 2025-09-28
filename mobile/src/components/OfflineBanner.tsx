@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { Text, Surface } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Icon } from './common/Icon';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 export const OfflineBanner: React.FC = () => {
@@ -31,7 +31,7 @@ export const OfflineBanner: React.FC = () => {
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Surface style={styles.banner}>
-        <Icon name="wifi-off" size={20} color="#FFFFFF" />
+        <Icon library="MaterialCommunityIcons" name="wifi-off" size={20} color="#FFFFFF" />
         <Text style={styles.text}>
           You're offline. Some features may be limited.
         </Text>

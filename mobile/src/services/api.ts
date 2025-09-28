@@ -8,29 +8,30 @@ const getApiUrl = async () => {
   if (Platform.OS === 'ios') {
     const isSimulator = await DeviceInfo.isEmulator();
     if (isSimulator) {
-      return 'http://localhost:8001/api';
+      return 'http://localhost:8080/api';
     }
     // For physical iOS device, use your computer's IP
     // Find with: ifconfig | grep "inet " | grep -v 127.0.0.1
-    return 'http://192.168.1.170:8001/api'; // Update this to your computer's IP
+    return 'http://192.168.1.170:8080/api'; // Update this to your computer's IP
   }
   
   // Android emulator needs special IP to access host machine
   if (Platform.OS === 'android') {
     const isEmulator = await DeviceInfo.isEmulator();
     if (isEmulator) {
-      return 'http://10.0.2.2:8001/api';
+      // Try local IP first for Android emulator, fallback to 10.0.2.2
+      return 'http://192.168.1.170:8080/api';
     }
     // For physical Android device, use your computer's IP
-    return 'http://192.168.1.170:8001/api'; // Update this to your computer's IP
+    return 'http://192.168.1.170:8080/api'; // Update this to your computer's IP
   }
   
   // Fallback
-  return 'http://localhost:8001/api';
+  return 'http://localhost:8080/api';
 };
 
 // Initialize API URL (will be set asynchronously)
-let API_BASE_URL = 'http://localhost:8001/api';
+let API_BASE_URL = 'http://localhost:8080/api';
 
 // Initialize the API URL
 getApiUrl().then(url => {

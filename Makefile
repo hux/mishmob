@@ -59,28 +59,24 @@ dev-createsuperuser: ## Create Django superuser
 	docker-compose exec backend python manage.py createsuperuser
 
 # Mobile development
-mobile-ios: ## Start iOS app with React Native CLI and Metro
-	@echo "Starting iOS app with React Native CLI and Metro..."
-	@echo "Starting Metro bundler on port 8083..."
-	@cd mobile && npm start -- --port=8083 &
+# Note: mobile-ios and mobile-android are defined below as the fresh versions
+
+mobile: mobile-stop-all ## Start fresh development environment with both iOS and Android simulators
+	@echo "Starting fresh mobile development environment with both iOS and Android..."
+	@echo "Waiting 3 seconds for processes to fully stop..."
+	@sleep 3
+	@echo "Starting Metro bundler on port 8085..."
+	@cd mobile && npm start -- --port=8085 &
 	@echo "Waiting for Metro to start..."
 	@sleep 5
-	@echo "Launching iOS simulator..."
-	@cd mobile && npm run ios -- --port=8083 || (echo "❌ iOS simulator failed. Try 'make mobile-fix-ios' to install simulators" && exit 1)
-
-mobile-android: ## Start Android app with React Native CLI and Metro
-	@echo "Starting Android app with React Native CLI and Metro..."
-	@echo "Starting Metro bundler on port 8082..."
-	@cd mobile && npm start -- --port=8082 &
-	@echo "Waiting for Metro to start..."
+	@echo "Launching iOS simulator in background..."
+	@cd mobile && npm run ios -- --port=8085 &
+	@echo "Waiting 3 seconds before starting Android..."
 	@sleep 3
 	@echo "Launching Android emulator..."
-	@cd mobile && npm run android
-
-mobile: ## Start Metro development server only
-	@echo "Starting Metro development server..."
-	@echo "Use 'make mobile-ios' or 'make mobile-android' to launch simulators"
-	@cd mobile && npm start -- --port=8082
+	@cd mobile && npm run android -- --port=8085
+	@echo "Both iOS and Android simulators are starting!"
+	@echo "Use 'make mobile-logs' to view logs from both platforms"
 
 mobile-web: ## Start mobile app in web browser (if supported)
 	@echo "Starting mobile app in web browser..."
@@ -163,13 +159,59 @@ mobile-metro-stop: ## Stop Metro bundler
 	@echo "Stopping Metro bundler..."
 	@pkill -f "node.*metro" || echo "Metro bundler not running"
 
+mobile-stop-all: ## Stop all mobile simulators and Metro bundlers
+	@echo "Stopping all mobile development processes..."
+	@echo "Killing all Metro bundlers..."
+	@pkill -f "node.*metro" || echo "No Metro bundlers running"
+	@pkill -f "react-native start" || echo "No React Native processes running"
+	@echo "Stopping Android emulators..."
+	@adb emu kill || echo "No Android emulators running"
+	@echo "Stopping iOS simulators..."
+	@xcrun simctl shutdown all || echo "No iOS simulators running"
+	@echo "All mobile processes stopped"
+
+mobile-fresh: mobile ## Alias for 'make mobile' - start fresh environment with both simulators
+	@echo "Use 'make mobile' instead - this is an alias"
+
+mobile-ios: mobile-stop-all ## Start fresh iOS simulator only
+	@echo "Starting fresh iOS development environment..."
+	@echo "Waiting 3 seconds for processes to fully stop..."
+	@sleep 3
+	@echo "Starting Metro bundler on port 8085..."
+	@cd mobile && npm start -- --port=8085 &
+	@echo "Waiting for Metro to start..."
+	@sleep 5
+	@echo "Launching fresh iOS simulator..."
+	@cd mobile && npm run ios -- --port=8085
+	@echo "Fresh iOS environment ready!"
+
+mobile-android: mobile-stop-all ## Start fresh Android simulator only
+	@echo "Starting fresh Android development environment..."
+	@echo "Waiting 3 seconds for processes to fully stop..."
+	@sleep 3
+	@echo "Starting Metro bundler on port 8085..."
+	@cd mobile && npm start -- --port=8085 &
+	@echo "Waiting for Metro to start..."
+	@sleep 5
+	@echo "Launching fresh Android emulator..."
+	@cd mobile && npm run android -- --port=8085
+	@echo "Fresh Android environment ready!"
+
+mobile-logs: ## Show logs from iOS and Android simulators
+	@echo "Showing mobile simulator logs (iOS and Android)..."
+	@echo "Press Ctrl+C to stop viewing logs"
+	@echo "=== iOS Simulator Logs ==="
+	@xcrun simctl spawn booted log stream --predicate 'process == "MishMobMobile"' &
+	@echo "=== Android Emulator Logs ==="
+	@adb logcat | grep -E "(ReactNativeJS|MishMobMobile)" || echo "No Android emulator connected"
+
 mobile-build-ios: ## Build iOS app for production
 	@echo "Building iOS app for production..."
 	@cd mobile && npx react-native run-ios --configuration Release
 
 mobile-build-android: ## Build Android app for production  
 	@echo "Building Android app for production..."
-	@cd mobile && npx react-native run-android --variant=release
+	@cd mobile/android && ./gradlew assembleRelease
 
 mobile-logs-ios: ## Show iOS simulator logs
 	@echo "Showing iOS simulator logs..."
