@@ -271,7 +271,9 @@ if [ -f "mobile-cli/package.json" ]; then
     if [ -d "ios" ]; then
         print_step "Installing iOS dependencies with CocoaPods..."
         cd ios
-        pod install
+        # Update repo first, then install all pods non-interactively
+        pod repo update
+        pod install --repo-update --verbose
         cd ..
     fi
     

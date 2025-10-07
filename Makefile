@@ -10,6 +10,24 @@ help: ## Show this help message
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+# Local Development Environment Setup
+setup: ## Setup local development environment for macOS (Homebrew, Node, Python, Docker, etc.)
+	@echo "Setting up local development environment for macOS..."
+	@chmod +x setup.sh
+	@./setup.sh
+	@echo ""
+	@echo "Setup complete! Please restart your terminal and run 'make verify' to check installation."
+
+verify: ## Verify local development environment setup
+	@echo "Verifying development environment..."
+	@chmod +x scripts/verify-setup.sh
+	@./scripts/verify-setup.sh
+
+setup-android: ## Complete Android development setup (requires Android Studio)
+	@echo "Setting up Android development environment..."
+	@chmod +x scripts/setup-android.sh
+	@./scripts/setup-android.sh
+
 # Development
 dev: ## Start ALL local development services (DB, Backend, Frontend, Redis, Meilisearch)
 	@echo "Starting all local development services..."
