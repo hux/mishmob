@@ -326,3 +326,121 @@ quick-deploy: build deploy ## Build and deploy in one command
 rollback: ## Rollback production deployment
 	kubectl rollout undo deployment/web-backend -n mishmob
 	kubectl rollout undo deployment/web-ui -n mishmob
+
+# Google Play Store deployment for mobile app
+mobile-play-setup: ## Set up Google Play Store deployment (one-time setup)
+	@echo "Setting up Google Play Store deployment..."
+	@echo "1. Installing fastlane..."
+	@cd mobile && bundle install
+	@echo "2. Installing fastlane plugin for Google Play..."
+	@cd mobile && bundle exec fastlane add_plugin versioning
+	@echo ""
+	@echo "Setup complete! Next steps:"
+	@echo "1. Generate a release keystore: make mobile-play-keystore"
+	@echo "2. Set up Google Play Console service account"
+	@echo "3. Configure environment variables (see mobile/.env.example)"
+	@echo "4. Run 'make mobile-play-build' to test the build"
+
+mobile-play-keystore: ## Generate Android release keystore
+	@echo "Generating Android release keystore..."
+	@echo "Enter keystore password:"
+	@read -s KEYSTORE_PASS; \
+	echo "Enter key alias name (e.g., mishmob-release):" && read KEY_ALIAS; \
+	echo "Enter key password:" && read -s KEY_PASS; \
+	cd mobile/android && \
+	keytool -genkey -v -keystore release.keystore -alias $$KEY_ALIAS -keyalg RSA -keysize 2048 -validity 10000 && \
+	echo "" && \
+	echo "Keystore generated at mobile/android/release.keystore" && \
+	echo "Add these to your environment variables:" && \
+	echo "ANDROID_KEYSTORE_PATH=android/release.keystore" && \
+	echo "ANDROID_KEYSTORE_PASSWORD=$$KEYSTORE_PASS" && \
+	echo "ANDROID_KEY_ALIAS=$$KEY_ALIAS" && \
+	echo "ANDROID_KEY_PASSWORD=$$KEY_PASS"
+
+mobile-play-clean: ## Clean mobile build artifacts
+	@echo "Cleaning mobile build artifacts..."
+	@cd mobile/android && ./gradlew clean || echo "Gradle clean failed"
+	@cd mobile && rm -rf android/app/build
+	@cd mobile && rm -rf node_modules/.cache
+	@echo "Mobile build artifacts cleaned"
+
+mobile-play-build: ## Build Android App Bundle for Play Store
+	@echo "Building Android App Bundle for Google Play Store..."
+	@echo "This will create a release AAB file"
+	@cd mobile && npm install
+	@cd mobile && bundle exec fastlane android build
+	@echo ""
+	@echo "Build complete! AAB file location:"
+	@echo "mobile/android/app/build/outputs/bundle/release/app-release.aab"
+
+mobile-play-internal: mobile-play-clean ## Deploy to Google Play Internal Testing
+	@echo "Deploying to Google Play Internal Testing track..."
+	@cd mobile && bundle exec fastlane android internal
+	@echo "Deployment to Internal Testing complete!"
+
+mobile-play-alpha: mobile-play-clean ## Deploy to Google Play Alpha Testing
+	@echo "Deploying to Google Play Alpha Testing track..."
+	@cd mobile && bundle exec fastlane android alpha
+	@echo "Deployment to Alpha Testing complete!"
+
+mobile-play-beta: mobile-play-clean ## Deploy to Google Play Beta Testing
+	@echo "Deploying to Google Play Beta Testing track..."
+	@cd mobile && bundle exec fastlane android beta
+	@echo "Deployment to Beta Testing complete!"
+
+mobile-play-production: mobile-play-clean ## Deploy to Google Play Production
+	@echo "Deploying to Google Play Production..."
+	@echo "WARNING: This will publish to production!"
+	@echo "Press Enter to continue or Ctrl+C to cancel"
+	@read confirm
+	@cd mobile && bundle exec fastlane android production
+	@echo "Deployment to Production complete!"
+
+mobile-play-promote-alpha: ## Promote Internal build to Alpha
+	@echo "Promoting Internal Testing build to Alpha..."
+	@cd mobile && bundle exec fastlane android promote_to_alpha
+	@echo "Promotion to Alpha complete!"
+
+mobile-play-promote-beta: ## Promote Alpha build to Beta
+	@echo "Promoting Alpha Testing build to Beta..."
+	@cd mobile && bundle exec fastlane android promote_to_beta
+	@echo "Promotion to Beta complete!"
+
+mobile-play-promote-production: ## Promote Beta build to Production
+	@echo "Promoting Beta Testing build to Production..."
+	@echo "WARNING: This will publish to production!"
+	@echo "Press Enter to continue or Ctrl+C to cancel"
+	@read confirm
+	@cd mobile && bundle exec fastlane android promote_to_production
+	@echo "Promotion to Production complete!"
+
+mobile-play-status: ## Check Google Play Console deployment status
+	@echo "Checking Google Play Console status..."
+	@cd mobile && bundle exec fastlane run google_play_track_version_codes package_name:com.mishmobmobile track:internal
+	@cd mobile && bundle exec fastlane run google_play_track_version_codes package_name:com.mishmobmobile track:alpha
+	@cd mobile && bundle exec fastlane run google_play_track_version_codes package_name:com.mishmobmobile track:beta
+	@cd mobile && bundle exec fastlane run google_play_track_version_codes package_name:com.mishmobmobile track:production
+
+# iOS TestFlight deployment
+mobile-testflight-prepare: ## Prepare iOS app for TestFlight submission
+	@echo "Preparing iOS app for TestFlight..."
+	@cd mobile && chmod +x scripts/prepare-testflight.sh
+	@cd mobile && ./scripts/prepare-testflight.sh
+
+mobile-ios-archive: ## Create iOS archive for App Store
+	@echo "Creating iOS archive for App Store..."
+	@cd mobile && xcodebuild -workspace ios/MishMobMobile.xcworkspace \
+		-scheme MishMobMobile \
+		-configuration Release \
+		-destination generic/platform=iOS \
+		-archivePath build/MishMob.xcarchive \
+		archive
+	@echo "Archive created at mobile/build/MishMob.xcarchive"
+	@echo "Open Xcode Organizer to upload to TestFlight"
+
+mobile-ios-clean: ## Clean iOS build artifacts
+	@echo "Cleaning iOS build artifacts..."
+	@cd mobile/ios && xcodebuild clean -workspace MishMobMobile.xcworkspace -scheme MishMobMobile
+	@cd mobile && rm -rf ios/build
+	@cd mobile && rm -rf build
+	@echo "iOS build artifacts cleaned"

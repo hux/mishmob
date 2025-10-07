@@ -23,6 +23,10 @@ export type MainStackParamList = {
   EventTicket: {
     ticketId: string;
   };
+  TicketScanner: {
+    eventId?: string;
+    eventTitle?: string;
+  };
 };
 
 // Combined navigation prop types

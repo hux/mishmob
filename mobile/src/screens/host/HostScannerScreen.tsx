@@ -57,9 +57,16 @@ export default function HostScannerScreen() {
   };
 
   const handleStartScanning = (event: ActiveEvent) => {
-    navigation.navigate('EventScanner' as never, {
+    navigation.navigate('TicketScanner' as never, {
       eventId: event.id,
       eventTitle: event.title,
+    } as never);
+  };
+
+  const handleQuickScan = () => {
+    navigation.navigate('TicketScanner' as never, {
+      eventId: undefined,
+      eventTitle: 'General Ticket Scanner',
     } as never);
   };
 
@@ -97,6 +104,12 @@ export default function HostScannerScreen() {
           You don't have any events with active check-in windows right now.
         </Text>
         <TouchableOpacity
+          style={styles.quickScanButton}
+          onPress={handleQuickScan}
+        >
+          <Text style={styles.quickScanButtonText}>Start General Scanner</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.viewEventsButton}
           onPress={() => navigation.navigate('Events' as never)}
         >
@@ -112,12 +125,20 @@ export default function HostScannerScreen() {
         <CommonIcon type="qrcode" size={48} color="#3B82F6" />
         <Text style={styles.headerTitle}>QR Code Scanner</Text>
         <Text style={styles.headerSubtitle}>
-          Select an event to start checking in volunteers
+          Select an event to start checking in volunteers, or use Quick Scan for general ticket scanning
         </Text>
       </View>
 
       <View style={styles.eventsSection}>
-        <Text style={styles.sectionTitle}>Active Events</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Active Events</Text>
+          <TouchableOpacity
+            style={styles.quickScanButtonSmall}
+            onPress={handleQuickScan}
+          >
+            <Text style={styles.quickScanButtonSmallText}>Quick Scan</Text>
+          </TouchableOpacity>
+        </View>
         
         {activeEvents.map((event) => (
           <TouchableOpacity
@@ -185,6 +206,12 @@ export default function HostScannerScreen() {
               Scan the QR code to check them in instantly
             </Text>
           </View>
+          <View style={styles.instructionItem}>
+            <Icon library="MaterialCommunityIcons" name="flash-circle" size={24} color="#10B981" />
+            <Text style={styles.instructionText}>
+              Use "Quick Scan" for general ticket scanning without selecting a specific event
+            </Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -235,6 +262,36 @@ const styles = StyleSheet.create({
   viewEventsButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  quickScanButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  quickScanButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  quickScanButtonSmall: {
+    backgroundColor: '#10B981',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  quickScanButtonSmallText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
   },
   header: {

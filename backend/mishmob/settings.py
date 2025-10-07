@@ -47,10 +47,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # Required for allauth
     
     # Third party apps
     'corsheaders',
     'ninja',
+    
+    # Allauth apps
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # Social providers
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.apple',
+    'allauth.socialaccount.providers.linkedin_oauth2',
     
     # Local apps
     'users',
@@ -69,6 +80,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Required for allauth
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -201,6 +213,111 @@ CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://mishmob.c
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
+
+# Django Sites Framework
+SITE_ID = 1
+
+# Django Allauth Configuration
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Allauth Settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_SIGNUP_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Social Account Settings
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_STORE_TOKENS = True
+
+# Custom adapters
+ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'users.adapters.SocialAccountAdapter'
+
+# Social Provider Settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'name',
+            'name_format',
+            'picture',
+            'short_name',
+            'email',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'LOCALE_FUNC': 'path.to.callable',
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v13.0',
+    },
+    'apple': {
+        'APP': {
+            # Your service identifier.
+            'client_id': config('APPLE_CLIENT_ID', default=''),
+            'secret': config('APPLE_PRIVATE_KEY', default=''),
+            'key': config('APPLE_KEY_ID', default=''),
+            'team': config('APPLE_TEAM_ID', default=''),
+        }
+    },
+    'linkedin_oauth2': {
+        'SCOPE': [
+            'r_liteprofile',
+            'r_emailaddress',
+        ],
+        'PROFILE_FIELDS': [
+            'id',
+            'first-name',
+            'last-name',
+            'email-address',
+            'picture-url',
+            'public-profile-url',
+        ]
+    }
+}
+
+# OAuth Provider Credentials
+GOOGLE_OAUTH2_CLIENT_ID = config('GOOGLE_OAUTH2_CLIENT_ID', default='')
+GOOGLE_OAUTH2_CLIENT_SECRET = config('GOOGLE_OAUTH2_CLIENT_SECRET', default='')
+
+FACEBOOK_APP_ID = config('FACEBOOK_APP_ID', default='')
+FACEBOOK_APP_SECRET = config('FACEBOOK_APP_SECRET', default='')
+
+APPLE_CLIENT_ID = config('APPLE_CLIENT_ID', default='')
+APPLE_PRIVATE_KEY = config('APPLE_PRIVATE_KEY', default='')
+APPLE_KEY_ID = config('APPLE_KEY_ID', default='')
+APPLE_TEAM_ID = config('APPLE_TEAM_ID', default='')
+
+LINKEDIN_OAUTH2_CLIENT_ID = config('LINKEDIN_OAUTH2_CLIENT_ID', default='')
+LINKEDIN_OAUTH2_CLIENT_SECRET = config('LINKEDIN_OAUTH2_CLIENT_SECRET', default='')
 
 # Email Settings
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

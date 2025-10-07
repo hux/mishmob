@@ -21,6 +21,7 @@ import MyTicketsScreen from '../screens/main/MyTicketsScreen';
 // Event Screens
 import { EventTicketScreen } from '../screens/events/EventTicketScreen';
 import { EventScannerScreen } from '../screens/events/EventScannerScreen';
+import { TicketScannerScreen } from '../screens/main/TicketScannerScreen';
 
 // Host Screens
 import HostEventsScreen from '../screens/host/HostEventsScreen';
@@ -151,6 +152,15 @@ function MainNavigator() {
         options={{ 
           title: 'QR Scanner',
           headerBackTitle: 'Back'
+        }}
+      />
+      <MainStack.Screen
+        name="TicketScanner"
+        component={TicketScannerScreen}
+        options={{ 
+          title: 'Ticket Scanner',
+          headerBackTitle: 'Back',
+          headerShown: false
         }}
       />
     </MainStack.Navigator>

@@ -194,12 +194,39 @@ export const eventsApi = {
       body: JSON.stringify(deviceInfo || {}),
     });
   },
+
+  async checkInVolunteer(eventId: string, scanData: {
+    qr_token: string;
+    latitude?: number;
+    longitude?: number;
+  }) {
+    return fetchWithAuth(`/events/${eventId}/check-in`, {
+      method: 'POST',
+      body: JSON.stringify(scanData),
+    });
+  },
 };
 
 // Tickets API
 export const ticketsApi = {
   async getQRCode(ticketId: string) {
     return fetchWithAuth(`/tickets/${ticketId}/qr-code`);
+  },
+
+  async scanTicket(scanData: {
+    qr_token: string;
+    event_id?: string;
+    latitude?: number;
+    longitude?: number;
+  }) {
+    return fetchWithAuth('/tickets/scan', {
+      method: 'POST',
+      body: JSON.stringify(scanData),
+    });
+  },
+
+  async getTicketDetails(ticketId: string) {
+    return fetchWithAuth(`/tickets/${ticketId}/details`);
   },
 };
 

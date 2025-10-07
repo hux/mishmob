@@ -33,6 +33,10 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+
+# Google Play Store deployment secrets
+.env
+fastlane/google-play-service-account.json
 .kotlin/
 
 # node.js

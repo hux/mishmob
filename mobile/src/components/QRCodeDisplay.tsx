@@ -77,6 +77,7 @@ export default function QRCodeDisplay({
       refreshIntervalRef.current = setInterval(() => {
         fetchQRCode();
       }, 25000); // Refresh every 25 seconds (QR codes valid for 30s with 5s grace)
+    }
     
     return () => {
       mountedRef.current = false;

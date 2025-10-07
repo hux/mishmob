@@ -42,6 +42,8 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('api/', api.urls),
+    # Django Allauth URLs
+    path('accounts/', include('allauth.urls')),
     # Only redirect non-API, non-admin paths to frontend
     path('', RedirectView.as_view(url='http://localhost:5173/', permanent=False)),
 ]
