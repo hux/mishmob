@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import heroImage from "@/assets/hero-community.jpg";
+import skillsImage from "@/assets/skills-matching.jpg";
 
 const CollageHero = () => {
   const navigate = useNavigate();
@@ -14,11 +16,18 @@ const CollageHero = () => {
   // Collage images with different positions and styles
   const collageImages = [
     {
+      src: "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&h=600&fit=crop",
+      alt: "Community volunteers working together",
+      className: "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[350px] rounded-3xl rotate-[2deg] z-35",
+      colorOverlay: "bg-gradient-to-br from-[#19D3DA]/50 to-[#2A6171]/50",
+      delay: "delay-100"
+    },
+    {
       src: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=400&fit=crop",
       alt: "Community volunteers",
       className: "absolute top-0 left-0 w-48 h-48 rounded-2xl rotate-[-5deg] z-10",
       colorOverlay: "bg-gradient-to-br from-[#75CAC3]/70 to-[#2A6171]/70",
-      delay: "delay-100"
+      delay: "delay-150"
     },
     {
       src: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=400&fit=crop",
@@ -33,6 +42,13 @@ const CollageHero = () => {
       className: "absolute top-0 right-20 w-56 h-56 rounded-3xl rotate-[3deg] z-10",
       colorOverlay: "bg-gradient-to-br from-[#19D3DA]/60 to-[#2A6171]/70",
       delay: "delay-300"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400&h=400&fit=crop",
+      alt: "Community leader",
+      className: "absolute top-8 right-8 w-72 h-72 rounded-3xl rotate-[-3deg] z-40",
+      colorOverlay: "bg-gradient-to-br from-[#F3D516]/50 to-[#75CAC3]/60",
+      delay: "delay-200"
     },
     {
       src: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=400&fit=crop",
@@ -225,21 +241,21 @@ const CollageHero = () => {
               <span className="text-[#75CAC3] block mt-2">Purpose</span>
             </h1>
             <p className="text-xl text-[#D7F7F5]/90 leading-relaxed max-w-2xl mx-auto">
-              Connect with meaningful opportunities that match your unique skills. 
+              Connect with meaningful opportunities that match your unique skills.
               Build stronger communities through purposeful action, one mission at a time.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Button 
-                size="xl" 
+              <Button
+                size="xl"
                 onClick={() => navigate('/register')}
                 className="bg-[#F3D516] hover:bg-[#F3D516]/90 text-[#2A6171] font-bold border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
               >
                 Find Your Mission
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="xl"
                 onClick={() => navigate('/register')}
                 className="border-2 border-[#75CAC3] hover:bg-[#75CAC3] hover:text-[#2A6171] bg-transparent text-[#D7F7F5] backdrop-blur-sm transition-all"

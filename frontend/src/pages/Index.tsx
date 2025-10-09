@@ -83,9 +83,9 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <img 
-                src={skillsImage} 
-                alt="Skills matching visualization"
+              <img
+                src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=600&fit=crop"
+                alt="Community collaboration and teamwork"
                 className="w-full rounded-2xl shadow-medium"
               />
             </div>
