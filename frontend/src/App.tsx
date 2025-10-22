@@ -38,6 +38,7 @@ import { Courses } from "./pages/Courses";
 import { CourseDetail } from "./pages/CourseDetail";
 import { ModuleViewer } from "./pages/ModuleViewer";
 import { LearningDashboard } from "./pages/LearningDashboard";
+import SkillsAssessment from "./pages/SkillsAssessment";
 
 const queryClient = new QueryClient();
 
@@ -139,13 +140,21 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/learning" 
+      <Route
+        path="/learning"
         element={
           <ProtectedRoute>
             <Layout><LearningDashboard /></Layout>
           </ProtectedRoute>
-        } 
+        }
+      />
+      <Route
+        path="/skills-assessment"
+        element={
+          <ProtectedRoute>
+            <SkillsAssessment />
+          </ProtectedRoute>
+        }
       />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<Layout><NotFound /></Layout>} />

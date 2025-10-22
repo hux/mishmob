@@ -56,7 +56,6 @@ services:
     volumes:
       - ./frontend:/app
       - ./shared:/app/shared
-      - /app/node_modules
     ports:
       - "8081:8081"  # Frontend on port 8081 as per CLAUDE.md
     environment:
