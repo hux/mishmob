@@ -1,5 +1,5 @@
 from ninja import NinjaAPI
-from api.routers import auth, opportunities, skills, messages, lms, verification, events
+from api.routers import auth, opportunities, skills, skills_assessment, messages, lms, verification, events
 
 # This function will be imported by the main urls.py
 def setup_api_routes(api: NinjaAPI):
@@ -7,6 +7,7 @@ def setup_api_routes(api: NinjaAPI):
     api.add_router("/auth", auth.router)  # Real authentication system
     api.add_router("/opportunities", opportunities.router)
     api.add_router("/skills", skills.router)
+    api.add_router("/skills-assessment", skills_assessment.router)  # Skills wizard/assessment
     api.add_router("/messages", messages.router)
     api.add_router("/lms", lms.router)
     api.add_router("/users", verification.router)
